@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Settings, ChevronDown, Check, Store, Image as ImageIcon, ArrowLeft, Trash2, Monitor, Loader2, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Settings, ChevronDown, Check, Store, Image as ImageIcon, ArrowLeft, Trash2, Monitor, Loader2, AlertTriangle, CheckCircle, Printer, Wifi, RefreshCw } from 'lucide-react';
 import AdminLayout from './AdminLayout';
 import TableMapper from './TableMapper';
 import { provinces, getCityMunByProvince, getBarangayByMun } from 'phil-reg-prov-mun-brgy';
@@ -90,6 +90,7 @@ export default function AdminSettings() {
         'Loyalty',
         'Taxes',
         'Receipt',
+        'Printers',
         'Branches',
         'Tables',
         'POS Devices'
@@ -147,6 +148,20 @@ export default function AdminSettings() {
         predefinedTickets: []
     });
     const [newPredefinedTicket, setNewPredefinedTicket] = useState('');
+
+    // Printers State (Kitchen & Counter)
+    const [printersList, setPrintersList] = useState([]);
+    const [newPrinter, setNewPrinter] = useState({
+        name: '',
+        type: 'counter',
+        ip_address: '',
+        port: 9100,
+        paper_width: '58mm',
+        branch_id: '',
+        auto_print: true
+    });
+    const [testingPrinterId, setTestingPrinterId] = useState(null);
+    const [testResults, setTestResults] = useState({});
 
     // POS Devices State
     const [posDevices, setPosDevices] = useState([]);
@@ -340,11 +355,22 @@ export default function AdminSettings() {
         }
     };
 
+    const fetchPrinters = async () => {
+        try {
+            const res = await fetch('http://localhost:5000/api/printers');
+            const data = await res.json();
+            setPrintersList(data);
+        } catch (err) {
+            console.error('Failed to fetch printers', err);
+        }
+    };
+
     useEffect(() => {
         fetchTaxes();
         fetchPayments();
         fetchDiningOptions();
         fetchPosDevices();
+        fetchPrinters();
     }, []);
 
     const toggleFeature = (key) => {
@@ -621,6 +647,103 @@ export default function AdminSettings() {
         });
     };
 
+    const handleAddPrinter = async (e) => {
+        e.preventDefault();
+        if (!newPrinter.name || !newPrinter.ip_address) {
+            showToast('error', 'Please provide a printer name and IP address');
+            return;
+        }
+
+        try {
+            const res = await fetch('http://localhost:5000/api/printers', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newPrinter)
+            });
+
+            if (res.ok) {
+                await fetchPrinters();
+                setNewPrinter({
+                    name: '',
+                    type: 'counter',
+                    ip_address: '',
+                    port: 9100,
+                    paper_width: '58mm',
+                    branch_id: '',
+                    auto_print: true
+                });
+                showToast('Printer configured successfully');
+            } else {
+                const data = await res.json();
+                showToast('error', data.error || 'Failed to save printer');
+            }
+        } catch (err) {
+            console.error(err);
+            showToast('error', 'Failed to save printer');
+        }
+    };
+
+    const handleDeletePrinter = async (id) => {
+        setDeleteModal({
+            name: 'this printer',
+            onConfirm: async () => {
+                await fetch(`http://localhost:5000/api/printers/${id}`, { method: 'DELETE' });
+                await fetchPrinters();
+                showToast('success', 'Printer removed');
+            }
+        });
+    };
+
+    const handleTestPrinterConnection = async (printer) => {
+        setTestingPrinterId(printer.id);
+        setTestResults(prev => ({ ...prev, [printer.id]: { loading: true } }));
+        try {
+            const res = await fetch('http://localhost:5000/api/printers/test-connection', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ip_address: printer.ip_address, port: printer.port })
+            });
+            const data = await res.json();
+            setTestResults(prev => ({ ...prev, [printer.id]: { loading: false, success: data.connected, message: data.message } }));
+            if (data.connected) {
+                showToast('Printer is online and connected!');
+            } else {
+                showToast('error', data.message || 'Cannot connect to printer');
+            }
+        } catch (err) {
+            setTestResults(prev => ({ ...prev, [printer.id]: { loading: false, success: false, message: err.message } }));
+            showToast('error', 'Connection test failed');
+        } finally {
+            setTestingPrinterId(null);
+        }
+    };
+
+    const handleTestPrint = async (printer) => {
+        setTestingPrinterId(printer.id);
+        try {
+            const res = await fetch('http://localhost:5000/api/printers/test-print', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    ip_address: printer.ip_address,
+                    port: printer.port,
+                    type: printer.type,
+                    paper_width: printer.paper_width
+                })
+            });
+            const data = await res.json();
+            if (data.success) {
+                showToast(`Test receipt printed on ${printer.name}!`);
+            } else {
+                showToast('error', data.error || 'Print failed');
+            }
+        } catch (err) {
+            showToast('error', err.message || 'Print error');
+        } finally {
+            setTestingPrinterId(null);
+        }
+    };
+
     const handleEditBranch = (branch) => {
         setEditingBranchId(branch.id);
         setNewBranch({
@@ -668,7 +791,7 @@ export default function AdminSettings() {
                     
                     {/* Settings Navigation */}
                     <div className="w-64 shrink-0 flex flex-col gap-2 overflow-y-auto custom-scrollbar pr-2 pb-8">
-                        {['Features', ...(features.openTickets ? ['Open Tickets'] : []), ...(features.diningOptions ? ['Dining Options'] : []), 'Payment Types', 'Taxes', 'Receipt', 'Branches', 'Tables', 'POS Devices', 'Billing & Subscriptions', 'Loyalty'].map(tab => (
+                        {['Features', ...(features.openTickets ? ['Open Tickets'] : []), ...(features.diningOptions ? ['Dining Options'] : []), 'Payment Types', 'Taxes', 'Receipt', 'Printers', 'Branches', 'Tables', 'POS Devices', 'Billing & Subscriptions', 'Loyalty'].map(tab => (
                             <button
                                 key={tab}
                                 onClick={() => setActiveTab(tab)}
@@ -1645,7 +1768,210 @@ export default function AdminSettings() {
                             </div>
                         )}
 
-                        {activeTab !== 'Features' && activeTab !== 'Dining Options' && activeTab !== 'Payment Types' && activeTab !== 'Taxes' && activeTab !== 'Receipt' && activeTab !== 'Branches' && activeTab !== 'Tables' && activeTab !== 'POS Devices' && (
+                        {activeTab === 'Printers' && (
+                            <div className="max-w-4xl">
+                                <div className="flex items-center justify-between mb-6 pb-4 border-b border-white/10">
+                                    <div>
+                                        <h3 className="text-xl font-bold text-white flex items-center gap-3">
+                                            <Printer className="text-butterscotch" size={24} />
+                                            IP Network Thermal Printers
+                                        </h3>
+                                        <p className="text-xs text-gray-400 mt-1">
+                                            Configure dedicated IP addresses for your <strong>Kitchen Printer</strong> and <strong>Counter Printer</strong>. Settings persist locally and stay connected automatically.
+                                        </p>
+                                    </div>
+                                    <button 
+                                        onClick={fetchPrinters}
+                                        className="p-2.5 bg-white/5 hover:bg-white/10 text-gray-300 rounded-lg transition-colors flex items-center gap-2 text-xs font-semibold"
+                                        title="Refresh Status"
+                                    >
+                                        <RefreshCw size={14} /> Refresh
+                                    </button>
+                                </div>
+
+                                {/* Add New Printer Form */}
+                                <form onSubmit={handleAddPrinter} className="glass-card p-6 rounded-xl mb-8 space-y-4">
+                                    <h4 className="font-bold text-white text-sm uppercase tracking-wider mb-2">Add / Configure IP Printer</h4>
+                                    
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div>
+                                            <label className="block text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wider">Printer Name *</label>
+                                            <input 
+                                                type="text" 
+                                                value={newPrinter.name}
+                                                onChange={(e) => setNewPrinter({...newPrinter, name: e.target.value})}
+                                                placeholder="e.g. Kitchen Line 1 or Front Counter"
+                                                className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-butterscotch placeholder-gray-600 text-sm"
+                                                required
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wider">Printer Role / Type *</label>
+                                            <select 
+                                                value={newPrinter.type}
+                                                onChange={(e) => setNewPrinter({...newPrinter, type: e.target.value})}
+                                                className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-butterscotch text-sm"
+                                            >
+                                                <option value="counter" className="text-gray-900">Counter Printer (Receipts & Invoices)</option>
+                                                <option value="kitchen" className="text-gray-900">Kitchen Printer (Order Tickets & KOT)</option>
+                                            </select>
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wider">Paper Width</label>
+                                            <select 
+                                                value={newPrinter.paper_width}
+                                                onChange={(e) => setNewPrinter({...newPrinter, paper_width: e.target.value})}
+                                                className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-butterscotch text-sm"
+                                            >
+                                                <option value="58mm" className="text-gray-900">58mm (Compact thermal - Recommended)</option>
+                                                <option value="80mm" className="text-gray-900">80mm (Standard wide thermal)</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div>
+                                            <label className="block text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wider">Printer Static IP Address *</label>
+                                            <input 
+                                                type="text" 
+                                                value={newPrinter.ip_address}
+                                                onChange={(e) => setNewPrinter({...newPrinter, ip_address: e.target.value})}
+                                                placeholder="e.g. 192.168.1.200"
+                                                className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-butterscotch placeholder-gray-600 font-mono text-sm"
+                                                required
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wider">Port (Standard RAW: 9100)</label>
+                                            <input 
+                                                type="number" 
+                                                value={newPrinter.port}
+                                                onChange={(e) => setNewPrinter({...newPrinter, port: parseInt(e.target.value, 10) || 9100})}
+                                                placeholder="9100"
+                                                className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-butterscotch font-mono text-sm"
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wider">Branch Assignment</label>
+                                            <select 
+                                                value={newPrinter.branch_id}
+                                                onChange={(e) => setNewPrinter({...newPrinter, branch_id: e.target.value})}
+                                                className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-butterscotch text-sm"
+                                            >
+                                                <option value="" className="text-gray-900">All Branches (Global)</option>
+                                                {branches.map(b => (
+                                                    <option key={b.id} value={b.id} className="text-gray-900">{b.name}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex justify-between items-center pt-2">
+                                        <label className="flex items-center gap-3 cursor-pointer text-sm text-gray-300">
+                                            <input 
+                                                type="checkbox"
+                                                checked={newPrinter.auto_print}
+                                                onChange={(e) => setNewPrinter({...newPrinter, auto_print: e.target.checked})}
+                                                className="accent-butterscotch w-4 h-4 rounded cursor-pointer"
+                                            />
+                                            <span>Automatically print on new order completion</span>
+                                        </label>
+
+                                        <button 
+                                            type="submit" 
+                                            className="bg-butterscotch hover:bg-butterscotch/90 text-charcoal font-bold px-8 py-3 rounded-xl transition-colors shadow-lg shadow-butterscotch/20 text-sm"
+                                        >
+                                            Save Printer
+                                        </button>
+                                    </div>
+                                </form>
+
+                                {/* Active Printers List */}
+                                <div className="space-y-4">
+                                    <h4 className="font-bold text-gray-300 text-sm uppercase tracking-wider">Connected Printers</h4>
+                                    {printersList.map(printer => {
+                                        const result = testResults[printer.id];
+                                        const isTesting = testingPrinterId === printer.id;
+                                        return (
+                                            <div key={printer.id} className="p-5 glass-card rounded-xl border border-white/5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                                <div className="flex items-start gap-4">
+                                                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${printer.type === 'kitchen' ? 'bg-orange-500/10 text-orange-400 border border-orange-500/20' : 'bg-butterscotch/10 text-butterscotch border border-butterscotch/20'}`}>
+                                                        <Printer size={24} />
+                                                    </div>
+                                                    <div>
+                                                        <div className="flex items-center gap-3">
+                                                            <h5 className="font-bold text-white text-lg">{printer.name}</h5>
+                                                            <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider ${printer.type === 'kitchen' ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30' : 'bg-butterscotch/20 text-butterscotch border border-butterscotch/30'}`}>
+                                                                {printer.type === 'kitchen' ? 'Kitchen (KOT)' : 'Counter (Receipt)'}
+                                                            </span>
+                                                            <span className="text-xs text-gray-500 bg-white/5 px-2 py-0.5 rounded border border-white/5">
+                                                                {printer.paper_width}
+                                                            </span>
+                                                        </div>
+                                                        <div className="flex items-center gap-4 text-xs text-gray-400 mt-2 font-mono">
+                                                            <span className="flex items-center gap-1.5 text-gray-300">
+                                                                <Wifi size={13} className="text-butterscotch" />
+                                                                {printer.ip_address}:{printer.port}
+                                                            </span>
+                                                            <span>•</span>
+                                                            <span>{branches.find(b => b.id === printer.branch_id)?.name || 'All Branches'}</span>
+                                                            <span>•</span>
+                                                            <span className={printer.auto_print ? "text-emerald-400" : "text-gray-500"}>
+                                                                {printer.auto_print ? 'Auto-print Enabled' : 'Manual print only'}
+                                                            </span>
+                                                        </div>
+                                                        {result && (
+                                                            <div className={`mt-2 text-xs flex items-center gap-1.5 ${result.success ? 'text-emerald-400' : 'text-red-400'}`}>
+                                                                {result.success ? <CheckCircle size={13} /> : <AlertTriangle size={13} />}
+                                                                <span>{result.message}</span>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+
+                                                <div className="flex items-center gap-2 shrink-0">
+                                                    <button 
+                                                        disabled={isTesting}
+                                                        onClick={() => handleTestPrinterConnection(printer)}
+                                                        className="px-3 py-2 bg-white/5 hover:bg-white/10 text-gray-300 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors disabled:opacity-50"
+                                                    >
+                                                        {isTesting ? <Loader2 size={13} className="animate-spin" /> : <Wifi size={13} />}
+                                                        Ping IP
+                                                    </button>
+                                                    <button 
+                                                        disabled={isTesting}
+                                                        onClick={() => handleTestPrint(printer)}
+                                                        className="px-3.5 py-2 bg-butterscotch/10 hover:bg-butterscotch/20 text-butterscotch rounded-lg text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-colors disabled:opacity-50"
+                                                    >
+                                                        {isTesting ? <Loader2 size={13} className="animate-spin" /> : <Printer size={13} />}
+                                                        Test Print
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => handleDeletePrinter(printer.id)}
+                                                        className="p-2 text-red-400 hover:text-red-300 bg-red-500/10 rounded-lg transition-colors"
+                                                        title="Delete printer"
+                                                    >
+                                                        <Trash2 size={16} />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+
+                                    {printersList.length === 0 && (
+                                        <div className="text-center p-8 border border-dashed border-white/20 rounded-xl text-gray-500">
+                                            No thermal IP printers configured yet. Add your Counter and Kitchen printers above.
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        {activeTab !== 'Features' && activeTab !== 'Dining Options' && activeTab !== 'Payment Types' && activeTab !== 'Taxes' && activeTab !== 'Receipt' && activeTab !== 'Printers' && activeTab !== 'Branches' && activeTab !== 'Tables' && activeTab !== 'POS Devices' && (
                             <div className="h-full flex flex-col items-center justify-center text-center text-gray-500">
                                 <div className="w-16 h-16 rounded-full bg-charcoal-dark/50 flex items-center justify-center mb-4 border border-charcoal-light">
                                     <Settings size={24} className="text-gray-400" />

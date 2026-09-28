@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Plus, Minus, Trash2, Check, CreditCard, Mail, ChevronDown, Wifi, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, Plus, Minus, Trash2, Check, CreditCard, Mail, ChevronDown, Wifi, CheckCircle2, Printer, Loader2 } from 'lucide-react';
 
 export default function CheckoutModal({ 
     isOpen, 
@@ -29,6 +29,69 @@ export default function CheckoutModal({
     const [totalPaid, setTotalPaid] = useState(0);
     const [changeDue, setChangeDue] = useState(0);
     const [receiptEmail, setReceiptEmail] = useState('');
+    const [lastCompletedOrder, setLastCompletedOrder] = useState(null);
+    const [printingStatus, setPrintingStatus] = useState({ kitchen: 'idle', counter: 'idle' });
+
+    const triggerOrderPrinting = async (orderPayload, orderId, paidAmt, change) => {
+        setLastCompletedOrder({ orderPayload, orderId, paidAmt, change });
+
+        // 1. Kitchen Ticket
+        setPrintingStatus(prev => ({ ...prev, kitchen: 'printing' }));
+        try {
+            const kitchenRes = await fetch('http://localhost:5000/api/printers/print-kitchen', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    branch_id: branchId,
+                    order: {
+                        id: orderId,
+                        ticket_name: activeOpenTicket?.ticket_name || `Ticket #${orderId}`,
+                        table_name: activeOpenTicket?.table_name || null,
+                        dining_option_name: selectedDiningOption?.name || 'Dine in',
+                        cashier_name: cashier?.name || cashier?.username,
+                        items: cart
+                    }
+                })
+            });
+            const kData = await kitchenRes.json();
+            setPrintingStatus(prev => ({ ...prev, kitchen: kData.success ? 'done' : 'error' }));
+        } catch (e) {
+            setPrintingStatus(prev => ({ ...prev, kitchen: 'error' }));
+        }
+
+        // 2. Counter Customer Receipt
+        setPrintingStatus(prev => ({ ...prev, counter: 'printing' }));
+        try {
+            const counterRes = await fetch('http://localhost:5000/api/printers/print-receipt', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    branch_id: branchId,
+                    receipt: {
+                        orderId,
+                        receipt_number: `POS-${orderId}`,
+                        store_name: cashier?.activeBranch?.name || 'SILINGAN GASTRO',
+                        branch_address: cashier?.activeBranch?.address || '',
+                        branch_phone: cashier?.activeBranch?.phone || '',
+                        cashier_name: cashier?.name || cashier?.username,
+                        customer_name: cartCustomer?.name || 'Walk-in Guest',
+                        dining_option: selectedDiningOption?.name || 'Dine in',
+                        items: cart,
+                        subtotal: cart.reduce((s, i) => s + parseFloat(i.price) * i.quantity, 0),
+                        tax_amount: 0,
+                        discount_amount: discountAmount || 0,
+                        total_amount: total,
+                        payments: orderPayload.payments,
+                        change_due: change
+                    }
+                })
+            });
+            const cData = await counterRes.json();
+            setPrintingStatus(prev => ({ ...prev, counter: cData.success ? 'done' : 'error' }));
+        } catch (e) {
+            setPrintingStatus(prev => ({ ...prev, counter: 'error' }));
+        }
+    };
 
     useEffect(() => {
         if (isOpen) {
@@ -40,6 +103,8 @@ export default function CheckoutModal({
             setTotalPaid(0);
             setChangeDue(0);
             setReceiptEmail('');
+            setLastCompletedOrder(null);
+            setPrintingStatus({ kitchen: 'idle', counter: 'idle' });
         }
     }, [isOpen, total]);
 
@@ -115,9 +180,11 @@ export default function CheckoutModal({
                         cash_payments: parseFloat(currentShift.cash_payments || 0) + total
                     });
                 }
+                const orderId = activeOpenTicket ? activeOpenTicket.id : data.orderId;
                 setTotalPaid(amt);
                 setChangeDue(amt - total);
                 setView('receipt');
+                triggerOrderPrinting(payload, orderId, amt, amt - total);
             } else {
                 alert(data.error || 'Failed to checkout');
             }
@@ -183,9 +250,11 @@ export default function CheckoutModal({
                             cash_payments: parseFloat(currentShift.cash_payments || 0) + cashTotal
                         });
                     }
+                    const orderId = activeOpenTicket ? activeOpenTicket.id : data.orderId;
                     setTotalPaid(total);
                     setChangeDue(0);
                     setView('receipt');
+                    triggerOrderPrinting(payload, orderId, total, 0);
                 } else {
                     updatedSplits[splitIndex] = { ...split, charged: false };
                     setSplits(updatedSplits);
@@ -472,6 +541,56 @@ export default function CheckoutModal({
                                 <div className="text-center">
                                     <p className="text-4xl font-bold text-butterscotch">₱{changeDue.toFixed(2)}</p>
                                     <p className="text-gray-500 text-xs mt-2 uppercase tracking-wider">Change</p>
+                                </div>
+                            </div>
+
+                            {/* Thermal Printers Status & Re-print Controls */}
+                            <div className="w-full max-w-lg mb-8 bg-black/40 border border-white/10 rounded-xl p-4 flex flex-col gap-3">
+                                <div className="flex items-center justify-between text-xs text-gray-400 border-b border-white/5 pb-2">
+                                    <span className="font-semibold text-white flex items-center gap-1.5">
+                                        <Printer size={14} className="text-butterscotch" />
+                                        Network IP Thermal Printers
+                                    </span>
+                                    <span>58mm / RAW ESC-POS</span>
+                                </div>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div className="flex items-center justify-between bg-white/5 p-2.5 rounded-lg border border-white/5">
+                                        <div>
+                                            <div className="text-xs font-bold text-white">Kitchen Printer</div>
+                                            <div className="text-[11px] text-gray-400">
+                                                {printingStatus.kitchen === 'printing' && <span className="text-amber-400 flex items-center gap-1"><Loader2 size={10} className="animate-spin" /> Printing...</span>}
+                                                {printingStatus.kitchen === 'done' && <span className="text-emerald-400">✓ Sent to Kitchen</span>}
+                                                {printingStatus.kitchen === 'error' && <span className="text-red-400">Failed / Offline</span>}
+                                                {printingStatus.kitchen === 'idle' && <span>Ready</span>}
+                                            </div>
+                                        </div>
+                                        <button 
+                                            onClick={() => lastCompletedOrder && triggerOrderPrinting(lastCompletedOrder.orderPayload, lastCompletedOrder.orderId, lastCompletedOrder.paidAmt, lastCompletedOrder.change)}
+                                            className="px-2 py-1 bg-white/10 hover:bg-white/20 text-gray-300 rounded text-[10px] font-bold uppercase transition-colors"
+                                            title="Reprint Kitchen Ticket"
+                                        >
+                                            Reprint
+                                        </button>
+                                    </div>
+
+                                    <div className="flex items-center justify-between bg-white/5 p-2.5 rounded-lg border border-white/5">
+                                        <div>
+                                            <div className="text-xs font-bold text-white">Counter Printer</div>
+                                            <div className="text-[11px] text-gray-400">
+                                                {printingStatus.counter === 'printing' && <span className="text-amber-400 flex items-center gap-1"><Loader2 size={10} className="animate-spin" /> Printing...</span>}
+                                                {printingStatus.counter === 'done' && <span className="text-emerald-400">✓ Receipt Printed</span>}
+                                                {printingStatus.counter === 'error' && <span className="text-red-400">Failed / Offline</span>}
+                                                {printingStatus.counter === 'idle' && <span>Ready</span>}
+                                            </div>
+                                        </div>
+                                        <button 
+                                            onClick={() => lastCompletedOrder && triggerOrderPrinting(lastCompletedOrder.orderPayload, lastCompletedOrder.orderId, lastCompletedOrder.paidAmt, lastCompletedOrder.change)}
+                                            className="px-2 py-1 bg-butterscotch/20 hover:bg-butterscotch/30 text-butterscotch rounded text-[10px] font-bold uppercase transition-colors"
+                                            title="Reprint Counter Receipt"
+                                        >
+                                            Reprint
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
 

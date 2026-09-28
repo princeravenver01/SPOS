@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Search, ChevronLeft, MoreVertical, CreditCard, Banknote, Mail } from 'lucide-react';
+import { Search, ChevronLeft, MoreVertical, CreditCard, Banknote, Mail, Printer, Loader2 } from 'lucide-react';
 
 export default function PosReceiptsView({ cashier, currentShift, onBack }) {
     const [receipts, setReceipts] = useState([]);
@@ -165,7 +165,42 @@ export default function PosReceiptsView({ cashier, currentShift, onBack }) {
                         {/* Details Header */}
                         <div className="h-16 px-6 flex items-center justify-between border-b border-white/10 shrink-0">
                             <span className="text-white font-medium text-lg">#{selectedReceipt.id.toString().padStart(4, '0')}</span>
-                            <div className="flex items-center gap-4 relative">
+                            <div className="flex items-center gap-3 relative">
+                                <button 
+                                    onClick={async () => {
+                                        try {
+                                            const res = await fetch('http://localhost:5000/api/printers/print-receipt', {
+                                                method: 'POST',
+                                                headers: { 'Content-Type': 'application/json' },
+                                                body: JSON.stringify({
+                                                    branch_id: branchId,
+                                                    receipt: {
+                                                        orderId: selectedReceipt.id,
+                                                        receipt_number: `POS-${selectedReceipt.id}`,
+                                                        store_name: cashier?.activeBranch?.name || 'SILINGAN GASTRO',
+                                                        branch_address: cashier?.activeBranch?.address || '',
+                                                        branch_phone: cashier?.activeBranch?.phone || '',
+                                                        cashier_name: selectedReceipt.employee_name || cashier?.name || 'Cashier',
+                                                        customer_name: selectedReceipt.customer_name || 'Customer',
+                                                        items: selectedReceipt.items || [],
+                                                        subtotal: selectedReceipt.total_amount,
+                                                        total_amount: selectedReceipt.total_amount,
+                                                        payments: selectedReceipt.payments || []
+                                                    }
+                                                })
+                                            });
+                                            const data = await res.json();
+                                            if (data.success) alert(`Receipt printed on ${data.printer}`);
+                                            else alert(data.error || 'Print failed');
+                                        } catch (e) {
+                                            alert('Failed to print receipt: ' + e.message);
+                                        }
+                                    }}
+                                    className="px-3 py-1.5 bg-butterscotch/10 hover:bg-butterscotch/20 text-butterscotch text-xs font-bold rounded-lg uppercase tracking-wider flex items-center gap-1.5 transition-colors"
+                                >
+                                    <Printer size={14} /> Print Receipt
+                                </button>
+
                                 <button 
                                     onClick={handleRefund}
                                     className="text-gray-300 hover:text-white text-sm font-medium uppercase tracking-wider transition-colors"
@@ -181,7 +216,36 @@ export default function PosReceiptsView({ cashier, currentShift, onBack }) {
 
                                 {/* Dropdown Menu */}
                                 {showMenu && (
-                                    <div className="absolute top-12 right-0 bg-charcoal border border-white/10 rounded-lg shadow-2xl z-10 w-48 overflow-hidden">
+                                    <div className="absolute top-12 right-0 bg-charcoal border border-white/10 rounded-lg shadow-2xl z-10 w-52 overflow-hidden">
+                                        <button 
+                                            onClick={async () => {
+                                                setShowMenu(false);
+                                                try {
+                                                    const res = await fetch('http://localhost:5000/api/printers/print-kitchen', {
+                                                        method: 'POST',
+                                                        headers: { 'Content-Type': 'application/json' },
+                                                        body: JSON.stringify({
+                                                            branch_id: branchId,
+                                                            order: {
+                                                                id: selectedReceipt.id,
+                                                                ticket_name: selectedReceipt.ticket_name || `Ticket #${selectedReceipt.id}`,
+                                                                cashier_name: selectedReceipt.employee_name || cashier?.name,
+                                                                items: selectedReceipt.items || []
+                                                            }
+                                                        })
+                                                    });
+                                                    const data = await res.json();
+                                                    if (data.success) alert(`Kitchen ticket printed on ${data.printer}`);
+                                                    else alert(data.error || 'Kitchen print failed');
+                                                } catch(e) {
+                                                    alert('Kitchen print failed: ' + e.message);
+                                                }
+                                            }}
+                                            className="w-full text-left px-4 py-3 text-sm text-gray-300 hover:text-butterscotch hover:bg-white/5 transition-colors flex items-center gap-3"
+                                        >
+                                            <Printer size={16} />
+                                            Print Kitchen Ticket
+                                        </button>
                                         <button 
                                             onClick={handleSendReceipt}
                                             className="w-full text-left px-4 py-3 text-sm text-gray-300 hover:text-butterscotch hover:bg-white/5 transition-colors flex items-center gap-3"

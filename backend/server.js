@@ -92,6 +92,7 @@ app.use('/api/reports', reportsRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/pos_pages', posPagesRoutes);
 app.use('/api/reservations', reservationsRoutes);
+app.use('/api/printers', require('./routes/printers'));
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, '0.0.0.0', () => console.log(`Server running on port ${PORT}`));
