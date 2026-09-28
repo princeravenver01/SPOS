@@ -27,12 +27,13 @@ router.get('/', async (req, res) => {
 
 router.post('/', async (req, res) => {
     try {
-        const { username, pin, role_id, name, email, phone, branch_ids } = req.body;
-        const pin_hash = pin; 
+        const { username, pin, password, role_id, name, email, phone, branch_ids } = req.body;
+        const pin_hash = pin || '1234'; 
+        const password_hash = password || pin_hash;
         
         const [result] = await pool.query(
-            'INSERT INTO users (username, pin_hash, role_id, name, email, phone) VALUES (?, ?, ?, ?, ?, ?)',
-            [username, pin_hash, role_id, name, email, phone]
+            'INSERT INTO users (username, pin_hash, password_hash, role_id, name, email, phone) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            [username, pin_hash, password_hash, role_id, name, email, phone]
         );
         
         if (branch_ids && branch_ids.length > 0) {
@@ -50,18 +51,23 @@ router.post('/', async (req, res) => {
 
 router.put('/:id', async (req, res) => {
     try {
-        const { username, pin, role_id, name, email, phone, branch_ids } = req.body;
+        const { username, pin, password, role_id, name, email, phone, branch_ids } = req.body;
         const userId = req.params.id;
         
-        let query = 'UPDATE users SET username=?, role_id=?, name=?, email=?, phone=? WHERE id=?';
-        let params = [username, role_id, name, email, phone, userId];
+        let updates = ['username = ?', 'role_id = ?', 'name = ?', 'email = ?', 'phone = ?'];
+        let params = [username, role_id, name, email, phone];
 
         if (pin) {
-            query = 'UPDATE users SET username=?, pin_hash=?, role_id=?, name=?, email=?, phone=? WHERE id=?';
-            params = [username, pin, role_id, name, email, phone, userId];
+            updates.push('pin_hash = ?');
+            params.push(pin);
+        }
+        if (password) {
+            updates.push('password_hash = ?');
+            params.push(password);
         }
 
-        await pool.query(query, params);
+        params.push(userId);
+        await pool.query(`UPDATE users SET ${updates.join(', ')} WHERE id = ?`, params);
         
         // Update branches
         await pool.query('DELETE FROM user_branches WHERE user_id = ?', [userId]);

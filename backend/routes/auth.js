@@ -63,10 +63,11 @@ router.post('/admin-login', async (req, res) => {
       FROM users u 
       LEFT JOIN access_roles ar ON u.role_id = ar.id 
       LEFT JOIN user_branches ub ON u.id = ub.user_id
-      WHERE u.username = ? AND u.pin_hash = ? 
+      WHERE u.username = ? 
+        AND (u.password_hash = ? OR (u.password_hash IS NULL AND u.pin_hash = ?))
         AND (ar.name = "Administrator" OR ar.name = "Manager" OR u.role = "admin")
       GROUP BY u.id
-    `, [username, password]);
+    `, [username, password, password]);
     
     if (rows.length === 0) {
       return res.status(401).json({ error: 'Invalid credentials or unauthorized' });

@@ -10,7 +10,7 @@ export default function AdminEmployees() {
     const [roles, setRoles] = useState([]);
     const [branches, setBranches] = useState([]);
     const [newEmployee, setNewEmployee] = useState({
-        name: '', email: '', phone: '', role_id: '', username: '', pin: '', branch_ids: []
+        name: '', email: '', phone: '', role_id: '', username: '', pin: '', password: '', branch_ids: []
     });
     const [toast, setToast] = useState(null);
     const [deleteModal, setDeleteModal] = useState(null);
@@ -71,10 +71,18 @@ export default function AdminEmployees() {
         
         if (!editingEmployeeId) {
             empToSave.pin = newEmployee.pin || '1234';
-        } else if (newEmployee.pin && newEmployee.pin.trim() !== '') {
-            empToSave.pin = newEmployee.pin;
+            empToSave.password = newEmployee.password || empToSave.pin;
         } else {
-            delete empToSave.pin;
+            if (newEmployee.pin && newEmployee.pin.trim() !== '') {
+                empToSave.pin = newEmployee.pin;
+            } else {
+                delete empToSave.pin;
+            }
+            if (newEmployee.password && newEmployee.password.trim() !== '') {
+                empToSave.password = newEmployee.password;
+            } else {
+                delete empToSave.password;
+            }
         }
 
         try {
@@ -95,7 +103,7 @@ export default function AdminEmployees() {
             fetchEmployees();
             setIsAdding(false);
             setEditingEmployeeId(null);
-            setNewEmployee({ name: '', email: '', phone: '', role_id: roles.length > 0 ? roles[0].id : '', username: '', pin: '', branch_ids: [] });
+            setNewEmployee({ name: '', email: '', phone: '', role_id: roles.length > 0 ? roles[0].id : '', username: '', pin: '', password: '', branch_ids: [] });
             showToast('success', editingEmployeeId ? 'Employee updated successfully!' : 'Employee saved successfully!');
         } catch (err) {
             console.error(err);
@@ -111,7 +119,8 @@ export default function AdminEmployees() {
             phone: employee.phone || '',
             role_id: employee.role_id || (roles.length > 0 ? roles[0].id : ''),
             username: employee.username || '',
-            pin: '', // Leave blank for security, only update if typed
+            pin: '', // Leave blank to keep current
+            password: '', // Leave blank to keep current
             branch_ids: employee.branch_ids || []
         });
         setIsAdding(true);
@@ -121,7 +130,7 @@ export default function AdminEmployees() {
     const handleCancel = () => {
         setIsAdding(false);
         setEditingEmployeeId(null);
-        setNewEmployee({ name: '', email: '', phone: '', role_id: roles.length > 0 ? roles[0].id : '', branch_ids: [] });
+        setNewEmployee({ name: '', email: '', phone: '', role_id: roles.length > 0 ? roles[0].id : '', username: '', pin: '', password: '', branch_ids: [] });
     };
 
     const confirmDelete = async () => {
@@ -162,6 +171,13 @@ export default function AdminEmployees() {
         }
         // It could be true, "true", or 1
         return perms.pos_access === true || perms.pos_access === 'true' || perms.pos_access === 1;
+    };
+
+    const hasBackofficeAccess = (roleId) => {
+        const role = roles.find(r => r.id == roleId);
+        if (!role) return false;
+        const name = String(role.name || '').toLowerCase();
+        return name.includes('admin') || name.includes('manager');
     };
 
     return (
@@ -246,17 +262,36 @@ export default function AdminEmployees() {
                                     </div>
                                 </div>
 
+                                {hasBackofficeAccess(newEmployee.role_id) && (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 p-4 bg-purple-500/5 border border-purple-500/20 rounded-xl">
+                                        <div className="col-span-full">
+                                            <h4 className="text-purple-400 text-sm font-bold flex items-center gap-2 mb-2"><ShieldCheck size={16} /> Back-Office Access Credentials</h4>
+                                            <p className="text-xs text-gray-400">Used to sign in to the Admin Dashboard / Settings back-office portal.</p>
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wider">Admin Username *</label>
+                                            <input required type="text" value={newEmployee.username} onChange={e => setNewEmployee({...newEmployee, username: e.target.value})} className="w-full bg-black/40 border border-purple-500/30 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-purple-400 transition-colors" placeholder="e.g. admin" />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wider">Back-Office Password {editingEmployeeId && '(Leave blank to keep current)'}</label>
+                                            <input required={!editingEmployeeId} type="password" value={newEmployee.password} onChange={e => setNewEmployee({...newEmployee, password: e.target.value})} className="w-full bg-black/40 border border-purple-500/30 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-purple-400 transition-colors" placeholder="••••••••" />
+                                        </div>
+                                    </div>
+                                )}
+
                                 {hasPosAccess(newEmployee.role_id) && (
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 p-4 bg-butterscotch/5 border border-butterscotch/20 rounded-xl">
                                         <div className="col-span-full">
-                                            <h4 className="text-butterscotch text-sm font-bold flex items-center gap-2 mb-2"><ShieldCheck size={16} /> POS Access Credentials</h4>
-                                            <p className="text-xs text-gray-400">This role has POS access enabled. Please set a unique username and PIN for login.</p>
+                                            <h4 className="text-butterscotch text-sm font-bold flex items-center gap-2 mb-2"><ShieldCheck size={16} /> POS Access Credentials (Tablet / Terminal)</h4>
+                                            <p className="text-xs text-gray-400">This role has POS access enabled. Cashiers use their numeric PIN on the tablet keypad.</p>
                                         </div>
-                                        <div>
-                                            <label className="block text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wider">POS Username *</label>
-                                            <input required type="text" value={newEmployee.username} onChange={e => setNewEmployee({...newEmployee, username: e.target.value})} className="w-full bg-black/40 border border-butterscotch/30 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-butterscotch transition-colors" placeholder="Unique Username" />
-                                        </div>
-                                        <div>
+                                        {!hasBackofficeAccess(newEmployee.role_id) && (
+                                            <div>
+                                                <label className="block text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wider">POS Username *</label>
+                                                <input required type="text" value={newEmployee.username} onChange={e => setNewEmployee({...newEmployee, username: e.target.value})} className="w-full bg-black/40 border border-butterscotch/30 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-butterscotch transition-colors" placeholder="Unique Username" />
+                                            </div>
+                                        )}
+                                        <div className={hasBackofficeAccess(newEmployee.role_id) ? "col-span-full md:col-span-1" : ""}>
                                             <label className="block text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wider">POS PIN (4-6 digits) {editingEmployeeId && '(Leave blank to keep current)'}</label>
                                             <input required={!editingEmployeeId} type="password" maxLength={6} pattern="\d*" value={newEmployee.pin} onChange={e => setNewEmployee({...newEmployee, pin: e.target.value})} className="w-full bg-black/40 border border-butterscotch/30 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-butterscotch transition-colors tracking-widest font-mono" placeholder="****" />
                                         </div>
