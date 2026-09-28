@@ -44,6 +44,7 @@ export default function PosTerminal() {
     const [currentShift, setCurrentShift] = useState(null);
     const [currentView, setCurrentView] = useState('Sales'); // 'Sales' or 'Shift'
     const [isTableSelectorModalOpen, setIsTableSelectorModalOpen] = useState(false);
+    const [allTables, setAllTables] = useState([]);
     const [ticketNamePrompt, setTicketNamePrompt] = useState(null);
     const { cashier, logout } = useAuth();
 
@@ -265,7 +266,54 @@ export default function PosTerminal() {
             }
             const data = await res.json();
             if (data.success || res.ok) {
-                showToast('Ticket saved successfully!');
+                const savedOrderId = data.orderId || activeOpenTicket?.id;
+                
+                // Lookup table name for ticket if tableId is present
+                let resolvedTableName = null;
+                if (tableId) {
+                    const matchedTable = allTables.find(t => t.id === tableId);
+                    resolvedTableName = matchedTable ? (matchedTable.combinedName || matchedTable.name) : `Table #${tableId}`;
+                }
+
+                // Automatically print ticket for Kitchen and Counter via intelligent Auto-Route:
+                // - Kitchen prints kitchen order ticket
+                // - Counter prints counter ticket/order
+                // - If only counter printer is saved, it automatically prints both tickets there
+                // - If no kitchen printer is saved, kitchen print is cancelled/skipped gracefully
+                fetch('http://localhost:5000/api/printers/auto-route', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        branch_id: cashier?.activeBranch?.id || null,
+                        is_saved_ticket: true,
+                        order: {
+                            id: savedOrderId,
+                            ticket_name: ticketName || (activeOpenTicket?.ticket_name) || `Ticket #${savedOrderId}`,
+                            table_name: resolvedTableName,
+                            dining_option_name: selectedDiningOption?.name || 'Dine in',
+                            cashier_name: cashier?.name || cashier?.username,
+                            items: cart
+                        },
+                        receipt: {
+                            orderId: savedOrderId,
+                            receipt_number: `TICKET-${savedOrderId || Date.now().toString().slice(-4)}`,
+                            store_name: cashier?.activeBranch?.name || 'SILINGAN GASTRO',
+                            branch_address: cashier?.activeBranch?.address || '',
+                            branch_phone: cashier?.activeBranch?.phone || '',
+                            cashier_name: cashier?.name || cashier?.username,
+                            customer_name: cartCustomer?.name || 'Walk-in Guest',
+                            dining_option: selectedDiningOption?.name || 'Dine in',
+                            items: cart,
+                            subtotal: subtotal,
+                            tax_amount: 0,
+                            discount_amount: discountAmount || 0,
+                            total_amount: total,
+                            footer_text: 'Ticket Saved / Open Order'
+                        }
+                    })
+                }).catch(printErr => console.warn('Auto-print error on ticket save:', printErr));
+
+                showToast('Ticket saved & sent to printer!');
                 setIsSaveTicketModalOpen(false);
                 setCart([]);
                 setCartCustomer(null);
@@ -417,6 +465,19 @@ export default function PosTerminal() {
             }
         };
         fetchSettings();
+
+        const fetchTables = async () => {
+            try {
+                const res = await fetch(`http://localhost:5000/api/tables?branch_id=${cashier?.activeBranch?.id || ''}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (Array.isArray(data)) setAllTables(data);
+                }
+            } catch (err) {
+                console.error('Failed to fetch tables:', err);
+            }
+        };
+        fetchTables();
 
         const fetchPosPages = async () => {
             try {

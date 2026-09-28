@@ -215,4 +215,117 @@ router.post('/print-receipt', async (req, res) => {
   }
 });
 
+// Intelligent Auto-Route for saved tickets & checkouts
+// Rules:
+// 1. If both Kitchen and Counter exist:
+//    - Kitchen printer prints the Kitchen Ticket
+//    - Counter printer prints the Counter Ticket / Receipt
+// 2. If ONLY Counter printer exists:
+//    - Counter printer prints the Counter Receipt/Ticket AND also prints the Kitchen Ticket
+// 3. If ONLY Kitchen printer exists:
+//    - Kitchen printer prints the Kitchen Ticket (Counter receipt is skipped)
+// 4. If neither exists or is active:
+//    - Gracefully succeeds with skipped status without errors
+router.post('/auto-route', async (req, res) => {
+  try {
+    const { branch_id, order, receipt, is_saved_ticket } = req.body;
+
+    // Fetch active printers for this branch
+    let query = "SELECT * FROM printers WHERE is_active = 1";
+    let params = [];
+    if (branch_id) {
+      query += " AND (branch_id = ? OR branch_id IS NULL)";
+      params.push(branch_id);
+    }
+    query += " ORDER BY branch_id DESC";
+
+    const [printers] = await pool.query(query, params);
+    
+    // Pick the most specific printer for each type
+    const kitchenPrinter = printers.find(p => p.type === 'kitchen');
+    const counterPrinter = printers.find(p => p.type === 'counter');
+
+    const results = {
+      kitchen: { status: 'skipped', message: 'No kitchen printer' },
+      counter: { status: 'skipped', message: 'No counter printer' }
+    };
+
+    // Scenario A: Both exist
+    if (kitchenPrinter && counterPrinter) {
+      if (order) {
+        try {
+          const cols = (kitchenPrinter.paper_width === '80mm') ? 42 : 32;
+          const kBuf = printerService.buildKitchenTicket(order, cols);
+          await printerService.sendToPrinter(kitchenPrinter.ip_address, kitchenPrinter.port, kBuf);
+          results.kitchen = { status: 'printed', printer: kitchenPrinter.name, ip: kitchenPrinter.ip_address };
+        } catch (e) {
+          results.kitchen = { status: 'error', error: e.message };
+        }
+      }
+
+      if (receipt) {
+        try {
+          const cols = (counterPrinter.paper_width === '80mm') ? 42 : 32;
+          const cBuf = printerService.buildCounterReceipt(receipt, cols);
+          await printerService.sendToPrinter(counterPrinter.ip_address, counterPrinter.port, cBuf);
+          results.counter = { status: 'printed', printer: counterPrinter.name, ip: counterPrinter.ip_address };
+        } catch (e) {
+          results.counter = { status: 'error', error: e.message };
+        }
+      }
+    } 
+    // Scenario B: ONLY Counter printer exists
+    else if (!kitchenPrinter && counterPrinter) {
+      const cols = (counterPrinter.paper_width === '80mm') ? 42 : 32;
+
+      // 1. Print Counter ticket/receipt
+      if (receipt) {
+        try {
+          const cBuf = printerService.buildCounterReceipt(receipt, cols);
+          await printerService.sendToPrinter(counterPrinter.ip_address, counterPrinter.port, cBuf);
+          results.counter = { status: 'printed', printer: counterPrinter.name, ip: counterPrinter.ip_address };
+        } catch (e) {
+          results.counter = { status: 'error', error: e.message };
+        }
+      }
+
+      // 2. Also print Kitchen ticket on the Counter printer so kitchen staff still get it
+      if (order) {
+        try {
+          const kBuf = printerService.buildKitchenTicket(order, cols);
+          await printerService.sendToPrinter(counterPrinter.ip_address, counterPrinter.port, kBuf);
+          results.kitchen = { status: 'printed_on_counter', printer: counterPrinter.name, ip: counterPrinter.ip_address };
+        } catch (e) {
+          results.kitchen = { status: 'error', error: e.message };
+        }
+      }
+    } 
+    // Scenario C: ONLY Kitchen printer exists
+    else if (kitchenPrinter && !counterPrinter) {
+      // Counter print is automatically cancelled / skipped
+      results.counter = { status: 'skipped', message: 'No counter printer detected' };
+
+      if (order) {
+        try {
+          const cols = (kitchenPrinter.paper_width === '80mm') ? 42 : 32;
+          const kBuf = printerService.buildKitchenTicket(order, cols);
+          await printerService.sendToPrinter(kitchenPrinter.ip_address, kitchenPrinter.port, kBuf);
+          results.kitchen = { status: 'printed', printer: kitchenPrinter.name, ip: kitchenPrinter.ip_address };
+        } catch (e) {
+          results.kitchen = { status: 'error', error: e.message };
+        }
+      }
+    } else {
+      // Scenario D: Neither exists
+      results.kitchen = { status: 'skipped', message: 'No kitchen printer saved' };
+      results.counter = { status: 'skipped', message: 'No counter printer saved' };
+    }
+
+    res.json({ success: true, results });
+  } catch (err) {
+    console.error('Auto-route print error:', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 module.exports = router;

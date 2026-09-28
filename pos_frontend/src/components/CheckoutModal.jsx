@@ -34,15 +34,15 @@ export default function CheckoutModal({
 
     const triggerOrderPrinting = async (orderPayload, orderId, paidAmt, change) => {
         setLastCompletedOrder({ orderPayload, orderId, paidAmt, change });
+        setPrintingStatus({ kitchen: 'printing', counter: 'printing' });
 
-        // 1. Kitchen Ticket
-        setPrintingStatus(prev => ({ ...prev, kitchen: 'printing' }));
         try {
-            const kitchenRes = await fetch('http://localhost:5000/api/printers/print-kitchen', {
+            const res = await fetch('http://localhost:5000/api/printers/auto-route', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     branch_id: branchId,
+                    is_saved_ticket: false,
                     order: {
                         id: orderId,
                         ticket_name: activeOpenTicket?.ticket_name || `Ticket #${orderId}`,
@@ -50,23 +50,7 @@ export default function CheckoutModal({
                         dining_option_name: selectedDiningOption?.name || 'Dine in',
                         cashier_name: cashier?.name || cashier?.username,
                         items: cart
-                    }
-                })
-            });
-            const kData = await kitchenRes.json();
-            setPrintingStatus(prev => ({ ...prev, kitchen: kData.success ? 'done' : 'error' }));
-        } catch (e) {
-            setPrintingStatus(prev => ({ ...prev, kitchen: 'error' }));
-        }
-
-        // 2. Counter Customer Receipt
-        setPrintingStatus(prev => ({ ...prev, counter: 'printing' }));
-        try {
-            const counterRes = await fetch('http://localhost:5000/api/printers/print-receipt', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    branch_id: branchId,
+                    },
                     receipt: {
                         orderId,
                         receipt_number: `POS-${orderId}`,
@@ -86,10 +70,23 @@ export default function CheckoutModal({
                     }
                 })
             });
-            const cData = await counterRes.json();
-            setPrintingStatus(prev => ({ ...prev, counter: cData.success ? 'done' : 'error' }));
+
+            const data = await res.json();
+            if (data.success && data.results) {
+                setPrintingStatus({
+                    kitchen: (data.results.kitchen?.status === 'printed' || data.results.kitchen?.status === 'printed_on_counter') 
+                        ? 'done' 
+                        : (data.results.kitchen?.status === 'skipped' ? 'skipped' : 'error'),
+                    counter: data.results.counter?.status === 'printed' 
+                        ? 'done' 
+                        : (data.results.counter?.status === 'skipped' ? 'skipped' : 'error')
+                });
+            } else {
+                setPrintingStatus({ kitchen: 'error', counter: 'error' });
+            }
         } catch (e) {
-            setPrintingStatus(prev => ({ ...prev, counter: 'error' }));
+            console.error("Auto print error:", e);
+            setPrintingStatus({ kitchen: 'error', counter: 'error' });
         }
     };
 
@@ -560,6 +557,7 @@ export default function CheckoutModal({
                                             <div className="text-[11px] text-gray-400">
                                                 {printingStatus.kitchen === 'printing' && <span className="text-amber-400 flex items-center gap-1"><Loader2 size={10} className="animate-spin" /> Printing...</span>}
                                                 {printingStatus.kitchen === 'done' && <span className="text-emerald-400">✓ Sent to Kitchen</span>}
+                                                {printingStatus.kitchen === 'skipped' && <span className="text-gray-500">None Saved (Skipped)</span>}
                                                 {printingStatus.kitchen === 'error' && <span className="text-red-400">Failed / Offline</span>}
                                                 {printingStatus.kitchen === 'idle' && <span>Ready</span>}
                                             </div>
@@ -579,6 +577,7 @@ export default function CheckoutModal({
                                             <div className="text-[11px] text-gray-400">
                                                 {printingStatus.counter === 'printing' && <span className="text-amber-400 flex items-center gap-1"><Loader2 size={10} className="animate-spin" /> Printing...</span>}
                                                 {printingStatus.counter === 'done' && <span className="text-emerald-400">✓ Receipt Printed</span>}
+                                                {printingStatus.counter === 'skipped' && <span className="text-gray-500">None Saved (Skipped)</span>}
                                                 {printingStatus.counter === 'error' && <span className="text-red-400">Failed / Offline</span>}
                                                 {printingStatus.counter === 'idle' && <span>Ready</span>}
                                             </div>
