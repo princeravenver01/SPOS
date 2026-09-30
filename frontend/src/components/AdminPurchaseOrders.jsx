@@ -44,10 +44,10 @@ export default function AdminPurchaseOrders() {
     const fetchData = async () => {
         try {
             const [posRes, suppRes, branchRes, prodRes] = await Promise.all([
-                fetch('http://localhost:5000/api/purchase-orders'),
-                fetch('http://localhost:5000/api/suppliers'),
-                fetch('http://localhost:5000/api/branches'),
-                fetch('http://localhost:5000/api/products')
+                fetch('/api/purchase-orders'),
+                fetch('/api/suppliers'),
+                fetch('/api/branches'),
+                fetch('/api/products')
             ]);
             setPurchaseOrders(await posRes.json());
             setSuppliers(await suppRes.json());
@@ -60,7 +60,7 @@ export default function AdminPurchaseOrders() {
 
     const fetchSinglePo = async (id) => {
         try {
-            const res = await fetch(`http://localhost:5000/api/purchase-orders/${id}`);
+            const res = await fetch(`/api/purchase-orders/${id}`);
             return await res.json();
         } catch (err) {
             console.error(err);
@@ -137,7 +137,7 @@ export default function AdminPurchaseOrders() {
         try {
             showToast('loading', 'Saving purchase order...');
             const method = currentPo ? 'PUT' : 'POST';
-            const url = currentPo ? `http://localhost:5000/api/purchase-orders/${currentPo.id}` : `http://localhost:5000/api/purchase-orders`;
+            const url = currentPo ? `/api/purchase-orders/${currentPo.id}` : `/api/purchase-orders`;
             
             await fetch(url, {
                 method,
@@ -164,7 +164,7 @@ export default function AdminPurchaseOrders() {
             if (itemsToReceive.length === 0) return showToast('error', 'Enter quantities to receive');
 
             showToast('loading', 'Receiving items...');
-            await fetch(`http://localhost:5000/api/purchase-orders/${currentPo.id}/receive`, {
+            await fetch(`/api/purchase-orders/${currentPo.id}/receive`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ itemsToReceive })
@@ -181,7 +181,7 @@ export default function AdminPurchaseOrders() {
     const confirmDelete = async () => {
         try {
             showToast('loading', 'Deleting purchase order...');
-            await fetch(`http://localhost:5000/api/purchase-orders/${deleteModal.id}`, { method: 'DELETE' });
+            await fetch(`/api/purchase-orders/${deleteModal.id}`, { method: 'DELETE' });
             fetchData();
             setDeleteModal(null);
             if (view === 'detail') setView('list');
@@ -196,7 +196,7 @@ export default function AdminPurchaseOrders() {
         setIsSending(true);
         showToast('loading', 'Sending email to supplier...');
         try {
-            const res = await fetch(`http://localhost:5000/api/purchase-orders/${id}/send`, {
+            const res = await fetch(`/api/purchase-orders/${id}/send`, {
                 method: 'POST'
             });
             const data = await res.json();
@@ -218,7 +218,7 @@ export default function AdminPurchaseOrders() {
         // Fetch incoming count for this product just for display in form
         let incoming = 0;
         try {
-            const res = await fetch(`http://localhost:5000/api/purchase-orders`);
+            const res = await fetch(`/api/purchase-orders`);
             const allPos = await res.json();
             for(let p of allPos) {
                 if(p.status === 'Pending' || p.status === 'Partially Received') {

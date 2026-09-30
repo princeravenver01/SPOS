@@ -181,7 +181,7 @@ export default function SplitTicketModal({
         setIsSaving(true);
         try {
             if (originalTicket.id) {
-                const res = await fetch(`http://localhost:5000/api/orders/${originalTicket.id}/split`, {
+                const res = await fetch(`/api/orders/${originalTicket.id}/split`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ tickets })
@@ -218,7 +218,7 @@ export default function SplitTicketModal({
                         }))
                     };
                     
-                    const res = await fetch('http://localhost:5000/api/orders/create', {
+                    const res = await fetch('/api/orders/create', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(orderData)

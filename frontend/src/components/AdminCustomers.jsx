@@ -35,7 +35,7 @@ export default function AdminCustomers() {
 
     const fetchBranches = async () => {
         try {
-            const res = await fetch('http://localhost:5000/api/branches');
+            const res = await fetch('/api/branches');
             const data = await res.json();
             setBranches(data);
         } catch (err) {
@@ -51,7 +51,7 @@ export default function AdminCustomers() {
 
     const fetchCustomers = async () => {
         try {
-            const res = await fetch('http://localhost:5000/api/customers');
+            const res = await fetch('/api/customers');
             const data = await res.json();
             setCustomers(data);
         } catch (err) {
@@ -108,13 +108,13 @@ export default function AdminCustomers() {
 
         try {
             if (editingCustomerId) {
-                await fetch(`http://localhost:5000/api/customers/${editingCustomerId}`, {
+                await fetch(`/api/customers/${editingCustomerId}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(customerData)
                 });
             } else {
-                await fetch('http://localhost:5000/api/customers', {
+                await fetch('/api/customers', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(customerData)
@@ -136,7 +136,7 @@ export default function AdminCustomers() {
     const confirmDelete = async () => {
         try {
             showToast('loading', 'Deleting customer...');
-            await fetch(`http://localhost:5000/api/customers/${deleteModal.id}`, { method: 'DELETE' });
+            await fetch(`/api/customers/${deleteModal.id}`, { method: 'DELETE' });
             fetchCustomers();
             setDeleteModal(null);
             showToast('success', 'Customer deleted successfully!');
@@ -246,7 +246,7 @@ export default function AdminCustomers() {
                 // To do this fully bulk in the backend, you'd create a /api/customers/bulk endpoint.
                 // For now, sequentially add (can be slow, but works for mockups)
                 for (let cust of newCustomers) {
-                    await fetch('http://localhost:5000/api/customers', {
+                    await fetch('/api/customers', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(cust)

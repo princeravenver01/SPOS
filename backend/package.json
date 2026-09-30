@@ -4,7 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node server.js",
+    "db:setup": "node setup_db.js",
+    "test": "node --test test/schema-contract.test.js && node --test test/dashboard-contract.test.js",
+    "test:schema": "node --test test/schema-contract.test.js"
   },
   "keywords": [],
   "author": "",

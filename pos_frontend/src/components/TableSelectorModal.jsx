@@ -37,7 +37,7 @@ const TableSelectorModalInner = ({ branchId, openTicketsList, onSelectTable, onC
                 if (!branchId) return;
                 
                 // Fetch areas
-                const areasRes = await fetch(`http://localhost:5000/api/areas?branch_id=${branchId}`);
+                const areasRes = await fetch(`/api/areas?branch_id=${branchId}`);
                 const areasData = await areasRes.json();
                 if (Array.isArray(areasData)) {
                     setAreas(areasData);
@@ -51,7 +51,7 @@ const TableSelectorModalInner = ({ branchId, openTicketsList, onSelectTable, onC
                 }
 
                 // Fetch tables
-                const tablesRes = await fetch(`http://localhost:5000/api/tables?branch_id=${branchId}`);
+                const tablesRes = await fetch(`/api/tables?branch_id=${branchId}`);
                 const tablesData = await tablesRes.json();
                 if (Array.isArray(tablesData)) {
                     setTables(tablesData);
@@ -153,7 +153,7 @@ const TableSelectorModalInner = ({ branchId, openTicketsList, onSelectTable, onC
                         style={{ 
                             width: '800px', 
                             height: '600px',
-                            backgroundImage: activeArea.map_image_url ? `url(http://localhost:5000${activeArea.map_image_url})` : 'none',
+                            backgroundImage: activeArea.map_image_url ? `url(${activeArea.map_image_url})` : 'none',
                             backgroundSize: 'contain',
                             backgroundPosition: 'center',
                             backgroundRepeat: 'no-repeat',
@@ -221,7 +221,7 @@ const TableSelectorModalInner = ({ branchId, openTicketsList, onSelectTable, onC
                                         // Toggle merge link
                                         const newParentId = isChild && table.merged_with_table_id === mergeParentId ? null : mergeParentId;
                                         try {
-                                            await fetch(`http://localhost:5000/api/tables/${table.id}`, {
+                                            await fetch(`/api/tables/${table.id}`, {
                                                 method: 'PUT',
                                                 headers: { 'Content-Type': 'application/json' },
                                                 body: JSON.stringify({ merged_with_table_id: newParentId })

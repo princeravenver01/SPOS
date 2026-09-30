@@ -28,7 +28,7 @@ export default function AdminDiscounts() {
 
     const fetchDiscounts = async () => {
         try {
-            const res = await fetch('http://localhost:5000/api/discounts');
+            const res = await fetch('/api/discounts');
             const data = await res.json();
             setDiscounts(data);
         } catch (err) {
@@ -47,13 +47,13 @@ export default function AdminDiscounts() {
         try {
             showToast('loading', 'Saving discount...');
             if (editingId) {
-                await fetch(`http://localhost:5000/api/discounts/${editingId}`, {
+                await fetch(`/api/discounts/${editingId}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(discountToSave)
                 });
             } else {
-                await fetch('http://localhost:5000/api/discounts', {
+                await fetch('/api/discounts', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(discountToSave)
@@ -73,7 +73,7 @@ export default function AdminDiscounts() {
     const confirmDelete = async () => {
         try {
             showToast('loading', 'Deleting discount...');
-            await fetch(`http://localhost:5000/api/discounts/${deleteModal.id}`, { method: 'DELETE' });
+            await fetch(`/api/discounts/${deleteModal.id}`, { method: 'DELETE' });
             fetchDiscounts();
             setDeleteModal(null);
             showToast('success', 'Discount deleted successfully!');

@@ -30,7 +30,7 @@ export default function AdminEmployees() {
 
     const fetchRoles = async () => {
         try {
-            const res = await fetch('http://localhost:5000/api/access-roles');
+            const res = await fetch('/api/access-roles');
             const data = await res.json();
             setRoles(data);
             if (data.length > 0) {
@@ -43,7 +43,7 @@ export default function AdminEmployees() {
 
     const fetchBranches = async () => {
         try {
-            const res = await fetch('http://localhost:5000/api/branches');
+            const res = await fetch('/api/branches');
             const data = await res.json();
             setBranches(data);
         } catch (err) {
@@ -53,7 +53,7 @@ export default function AdminEmployees() {
 
     const fetchEmployees = async () => {
         try {
-            const res = await fetch('http://localhost:5000/api/employees');
+            const res = await fetch('/api/employees');
             const data = await res.json();
             setEmployees(data);
         } catch (err) {
@@ -88,13 +88,13 @@ export default function AdminEmployees() {
         try {
             showToast('loading', editingEmployeeId ? 'Updating employee...' : 'Saving employee...');
             if (editingEmployeeId) {
-                await fetch(`http://localhost:5000/api/employees/${editingEmployeeId}`, {
+                await fetch(`/api/employees/${editingEmployeeId}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(empToSave)
                 });
             } else {
-                await fetch('http://localhost:5000/api/employees', {
+                await fetch('/api/employees', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(empToSave)
@@ -136,7 +136,7 @@ export default function AdminEmployees() {
     const confirmDelete = async () => {
         try {
             showToast('loading', 'Deleting employee...');
-            const res = await fetch(`http://localhost:5000/api/employees/${deleteModal.id}`, { method: 'DELETE' });
+            const res = await fetch(`/api/employees/${deleteModal.id}`, { method: 'DELETE' });
             if (res.ok) {
                 fetchEmployees();
                 setDeleteModal(null);

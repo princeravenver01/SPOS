@@ -35,9 +35,9 @@ export default function AdminStockAdjustments() {
     const fetchData = async () => {
         try {
             const [saRes, branchRes, prodRes] = await Promise.all([
-                fetch('http://localhost:5000/api/stock-adjustments'),
-                fetch('http://localhost:5000/api/branches'),
-                fetch('http://localhost:5000/api/products')
+                fetch('/api/stock-adjustments'),
+                fetch('/api/branches'),
+                fetch('/api/products')
             ]);
             setStockAdjustments(await saRes.json());
             setBranches(await branchRes.json());
@@ -49,7 +49,7 @@ export default function AdminStockAdjustments() {
 
     const fetchSingleSa = async (id) => {
         try {
-            const res = await fetch(`http://localhost:5000/api/stock-adjustments/${id}`);
+            const res = await fetch(`/api/stock-adjustments/${id}`);
             return await res.json();
         } catch (err) {
             console.error(err);
@@ -87,7 +87,7 @@ export default function AdminStockAdjustments() {
 
         try {
             showToast('loading', 'Processing stock adjustment...');
-            const res = await fetch(`http://localhost:5000/api/stock-adjustments`, {
+            const res = await fetch(`/api/stock-adjustments`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formSa)

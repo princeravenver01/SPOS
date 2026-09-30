@@ -42,7 +42,7 @@ export default function AdminReceipts() {
 
     const fetchEmployees = async () => {
         try {
-            const response = await fetch('http://localhost:5000/api/employees');
+            const response = await fetch('/api/employees');
             const data = await response.json();
             setEmployees(data);
         } catch (error) {
@@ -53,7 +53,7 @@ export default function AdminReceipts() {
     const fetchReceipts = async () => {
         setLoading(true);
         try {
-            const response = await fetch(`http://localhost:5000/api/reports/receipts?startDate=${startDate}&endDate=${endDate}&employeeId=${employeeId}`);
+            const response = await fetch(`/api/reports/receipts?startDate=${startDate}&endDate=${endDate}&employeeId=${employeeId}`);
             if (response.ok) {
                 const data = await response.json();
                 if (data.success) {

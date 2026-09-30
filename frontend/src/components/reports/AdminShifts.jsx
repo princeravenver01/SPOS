@@ -27,7 +27,7 @@ export default function AdminShifts() {
     const fetchShifts = async () => {
         setLoading(true);
         try {
-            const response = await fetch(`http://localhost:5000/api/reports/shifts?startDate=${startDate}&endDate=${endDate}`);
+            const response = await fetch(`/api/reports/shifts?startDate=${startDate}&endDate=${endDate}`);
             if (response.ok) {
                 const data = await response.json();
                 if (data.success) {

@@ -21,7 +21,7 @@ export default function TableMapper({ area, onClose, showToast }) {
     // Fetch existing tables for this area
     const fetchTables = async () => {
         try {
-            const res = await fetch(`http://localhost:5000/api/tables?area_id=${area.id}`);
+            const res = await fetch(`/api/tables?area_id=${area.id}`);
             const data = await res.json();
             setTables(data);
             setLoading(false);
@@ -41,8 +41,8 @@ export default function TableMapper({ area, onClose, showToast }) {
         
         try {
             const url = editingTableId 
-                ? `http://localhost:5000/api/tables/${editingTableId}`
-                : 'http://localhost:5000/api/tables';
+                ? `/api/tables/${editingTableId}`
+                : '/api/tables';
             const method = editingTableId ? 'PUT' : 'POST';
             
             const payload = editingTableId 
@@ -94,7 +94,7 @@ export default function TableMapper({ area, onClose, showToast }) {
         e.stopPropagation();
         try {
             const newStatus = !table.is_enabled;
-            const res = await fetch(`http://localhost:5000/api/tables/${table.id}`, {
+            const res = await fetch(`/api/tables/${table.id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ is_enabled: newStatus })
@@ -113,7 +113,7 @@ export default function TableMapper({ area, onClose, showToast }) {
         e.stopPropagation();
         if (!confirm('Delete this table?')) return;
         try {
-            await fetch(`http://localhost:5000/api/tables/${id}`, { method: 'DELETE' });
+            await fetch(`/api/tables/${id}`, { method: 'DELETE' });
             setTables(tables.filter(t => t.id !== id));
             showToast('Table deleted');
         } catch (err) {
@@ -124,7 +124,7 @@ export default function TableMapper({ area, onClose, showToast }) {
     const handleSavePositions = async () => {
         try {
             for (let table of tables) {
-                await fetch(`http://localhost:5000/api/tables/${table.id}`, {
+                await fetch(`/api/tables/${table.id}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -213,7 +213,7 @@ export default function TableMapper({ area, onClose, showToast }) {
                             style={{ 
                                 width: '800px', // Fixed aspect ratio box for mapping
                                 height: '600px',
-                                backgroundImage: area.map_image_url ? `url(http://localhost:5000${area.map_image_url})` : 'none',
+                                backgroundImage: area.map_image_url ? `url(${area.map_image_url})` : 'none',
                                 backgroundSize: 'contain',
                                 backgroundPosition: 'center',
                                 backgroundRepeat: 'no-repeat',

@@ -180,7 +180,7 @@ export default function AdminSettings() {
     // Fetch areas for a branch
     const fetchAreas = async (branchId) => {
         try {
-            const res = await fetch(`http://localhost:5000/api/areas?branch_id=${branchId}`);
+            const res = await fetch(`/api/areas?branch_id=${branchId}`);
             const data = await res.json();
             setAreas(data);
         } catch (err) {
@@ -204,7 +204,7 @@ export default function AdminSettings() {
                 formData.append('map_image', newArea.mapImage);
             }
 
-            const res = await fetch('http://localhost:5000/api/areas', {
+            const res = await fetch('/api/areas', {
                 method: 'POST',
                 body: formData
             });
@@ -224,7 +224,7 @@ export default function AdminSettings() {
         setDeleteModal({
             name: 'this area',
             onConfirm: async () => {
-                await fetch(`http://localhost:5000/api/areas/${id}`, { method: 'DELETE' });
+                await fetch(`/api/areas/${id}`, { method: 'DELETE' });
                 setAreas(areas.filter(a => a.id !== id));
                 showToast('success', 'Area removed');
             }
@@ -261,7 +261,7 @@ export default function AdminSettings() {
     // --- API helpers ---
     const saveSetting = async (key, value) => {
         try {
-            await fetch('http://localhost:5000/api/settings', {
+            await fetch('/api/settings', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ key, value })
@@ -273,7 +273,7 @@ export default function AdminSettings() {
 
     const fetchBranches = async () => {
         try {
-            const res = await fetch('http://localhost:5000/api/branches');
+            const res = await fetch('/api/branches');
             const data = await res.json();
             setBranches(data);
         } catch (err) {
@@ -286,7 +286,7 @@ export default function AdminSettings() {
         fetchBranches();
         (async () => {
             try {
-                const res = await fetch('http://localhost:5000/api/settings');
+                const res = await fetch('/api/settings');
                 const data = await res.json();
 
                 if (data.features) {
@@ -317,7 +317,7 @@ export default function AdminSettings() {
 
     const fetchTaxes = async () => {
         try {
-            const res = await fetch('http://localhost:5000/api/taxes');
+            const res = await fetch('/api/taxes');
             const data = await res.json();
             setTaxes(data);
         } catch (err) {
@@ -327,7 +327,7 @@ export default function AdminSettings() {
 
     const fetchPayments = async () => {
         try {
-            const res = await fetch('http://localhost:5000/api/payments');
+            const res = await fetch('/api/payments');
             const data = await res.json();
             setPaymentTypes(data);
         } catch (err) {
@@ -337,7 +337,7 @@ export default function AdminSettings() {
 
     const fetchDiningOptions = async () => {
         try {
-            const res = await fetch('http://localhost:5000/api/dining-options');
+            const res = await fetch('/api/dining-options');
             const data = await res.json();
             setDiningOptionsList(data);
         } catch (err) {
@@ -347,7 +347,7 @@ export default function AdminSettings() {
 
     const fetchPosDevices = async () => {
         try {
-            const res = await fetch('http://localhost:5000/api/pos-devices');
+            const res = await fetch('/api/pos-devices');
             const data = await res.json();
             setPosDevices(data);
         } catch (err) {
@@ -357,7 +357,7 @@ export default function AdminSettings() {
 
     const fetchPrinters = async () => {
         try {
-            const res = await fetch('http://localhost:5000/api/printers');
+            const res = await fetch('/api/printers');
             const data = await res.json();
             setPrintersList(data);
         } catch (err) {
@@ -393,7 +393,7 @@ export default function AdminSettings() {
                 branch_id: newPayment.branch ? parseInt(newPayment.branch) : null
             };
 
-            const res = await fetch('http://localhost:5000/api/payments', {
+            const res = await fetch('/api/payments', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
@@ -416,7 +416,7 @@ export default function AdminSettings() {
         setDeleteModal({
             name: 'this payment type',
             onConfirm: async () => {
-                await fetch(`http://localhost:5000/api/payments/${id}`, { method: 'DELETE' });
+                await fetch(`/api/payments/${id}`, { method: 'DELETE' });
                 await fetchPayments();
                 showToast('success', 'Payment type removed');
             }
@@ -428,7 +428,7 @@ export default function AdminSettings() {
         if (!newDiningOptionName) return;
         
         try {
-            const res = await fetch('http://localhost:5000/api/dining-options', {
+            const res = await fetch('/api/dining-options', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name: newDiningOptionName })
@@ -450,7 +450,7 @@ export default function AdminSettings() {
         setDeleteModal({
             name: 'this dining option',
             onConfirm: async () => {
-                await fetch(`http://localhost:5000/api/dining-options/${id}`, { method: 'DELETE' });
+                await fetch(`/api/dining-options/${id}`, { method: 'DELETE' });
                 await fetchDiningOptions();
                 showToast('success', 'Dining option removed');
             }
@@ -462,7 +462,7 @@ export default function AdminSettings() {
         if (!newTax.name || !newTax.rate) return;
         
         try {
-            const res = await fetch('http://localhost:5000/api/taxes', {
+            const res = await fetch('/api/taxes', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(newTax)
@@ -487,7 +487,7 @@ export default function AdminSettings() {
         setDeleteModal({
             name: 'this tax',
             onConfirm: async () => {
-                await fetch(`http://localhost:5000/api/taxes/${id}`, { method: 'DELETE' });
+                await fetch(`/api/taxes/${id}`, { method: 'DELETE' });
                 await fetchTaxes();
                 showToast('success', 'Tax deleted');
             }
@@ -503,7 +503,7 @@ export default function AdminSettings() {
         
         const fetchReceiptSettings = async () => {
             try {
-                const res = await fetch(`http://localhost:5000/api/receipts?branch_id=${managingReceiptsBranchId}`);
+                const res = await fetch(`/api/receipts?branch_id=${managingReceiptsBranchId}`);
                 const data = await res.json();
                 if (data) {
                     setReceiptSettings({
@@ -542,7 +542,7 @@ export default function AdminSettings() {
                 formData.append('remove_logo', 'true');
             }
 
-            const res = await fetch('http://localhost:5000/api/receipts', {
+            const res = await fetch('/api/receipts', {
                 method: 'POST',
                 body: formData
             });
@@ -585,14 +585,14 @@ export default function AdminSettings() {
 
         try {
             if (editingBranchId) {
-                await fetch(`http://localhost:5000/api/branches/${editingBranchId}`, {
+                await fetch(`/api/branches/${editingBranchId}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(newBranch)
                 });
                 showToast('Branch updated successfully');
             } else {
-                await fetch('http://localhost:5000/api/branches', {
+                await fetch('/api/branches', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(newBranch)
@@ -617,7 +617,7 @@ export default function AdminSettings() {
         }
         
         try {
-            const res = await fetch('http://localhost:5000/api/pos-devices', {
+            const res = await fetch('/api/pos-devices', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name: newPosDevice.name, branch_id: newPosDevice.branchId })
@@ -640,7 +640,7 @@ export default function AdminSettings() {
         setDeleteModal({
             name: 'this POS device',
             onConfirm: async () => {
-                await fetch(`http://localhost:5000/api/pos-devices/${id}`, { method: 'DELETE' });
+                await fetch(`/api/pos-devices/${id}`, { method: 'DELETE' });
                 await fetchPosDevices();
                 showToast('success', 'POS Device removed');
             }
@@ -655,7 +655,7 @@ export default function AdminSettings() {
         }
 
         try {
-            const res = await fetch('http://localhost:5000/api/printers', {
+            const res = await fetch('/api/printers', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(newPrinter)
@@ -687,7 +687,7 @@ export default function AdminSettings() {
         setDeleteModal({
             name: 'this printer',
             onConfirm: async () => {
-                await fetch(`http://localhost:5000/api/printers/${id}`, { method: 'DELETE' });
+                await fetch(`/api/printers/${id}`, { method: 'DELETE' });
                 await fetchPrinters();
                 showToast('success', 'Printer removed');
             }
@@ -698,7 +698,7 @@ export default function AdminSettings() {
         setTestingPrinterId(printer.id);
         setTestResults(prev => ({ ...prev, [printer.id]: { loading: true } }));
         try {
-            const res = await fetch('http://localhost:5000/api/printers/test-connection', {
+            const res = await fetch('/api/printers/test-connection', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ ip_address: printer.ip_address, port: printer.port })
@@ -721,7 +721,7 @@ export default function AdminSettings() {
     const handleTestPrint = async (printer) => {
         setTestingPrinterId(printer.id);
         try {
-            const res = await fetch('http://localhost:5000/api/printers/test-print', {
+            const res = await fetch('/api/printers/test-print', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -1269,7 +1269,7 @@ export default function AdminSettings() {
                                                 ) : receiptSettings.logoUrl ? (
                                                     <div className="h-16 w-16 rounded bg-white/10 border border-white/20 flex items-center justify-center overflow-hidden shrink-0 relative group">
                                                         <img 
-                                                            src={`http://localhost:5000${receiptSettings.logoUrl}`} 
+                                                            src={`${receiptSettings.logoUrl}`}
                                                             alt="Logo Preview" 
                                                             className="max-h-full max-w-full object-contain"
                                                         />
@@ -1536,7 +1536,7 @@ export default function AdminSettings() {
                                                     onClick={() => setDeleteModal({
                                                         name: branch.name,
                                                         onConfirm: async () => {
-                                                            await fetch(`http://localhost:5000/api/branches/${branch.id}`, { method: 'DELETE' });
+                                                            await fetch(`/api/branches/${branch.id}`, { method: 'DELETE' });
                                                             fetchBranches();
                                                             showToast('success', 'Branch deleted');
                                                         }
@@ -1654,7 +1654,7 @@ export default function AdminSettings() {
                                             {areas.map(area => (
                                                 <div key={area.id} className="p-4 glass-card rounded-xl border border-white/5 flex gap-4 items-center">
                                                     {area.map_image_url ? (
-                                                        <img src={`http://localhost:5000${area.map_image_url}`} alt={area.name} className="w-20 h-20 object-cover rounded-lg bg-black/30" />
+                                                        <img src={`${area.map_image_url}`} alt={area.name} className="w-20 h-20 object-cover rounded-lg bg-black/30" />
                                                     ) : (
                                                         <div className="w-20 h-20 flex flex-col items-center justify-center bg-black/20 rounded-lg border border-dashed border-white/10 text-gray-500">
                                                             <ImageIcon size={24} />

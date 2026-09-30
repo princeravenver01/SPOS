@@ -45,7 +45,7 @@ export default function AdminInventoryHistory() {
 
     useEffect(() => {
         if (productId) {
-            fetch(`http://localhost:5000/api/products`)
+            fetch(`/api/products`)
                 .then(res => res.json())
                 .then(data => {
                     const prod = data.find(p => p.id === parseInt(productId));
@@ -57,7 +57,7 @@ export default function AdminInventoryHistory() {
 
     const fetchBranches = async () => {
         try {
-            const res = await fetch('http://localhost:5000/api/branches');
+            const res = await fetch('/api/branches');
             const data = await res.json();
             setBranches(data);
         } catch (err) {
@@ -67,7 +67,7 @@ export default function AdminInventoryHistory() {
 
     const fetchEmployees = async () => {
         try {
-            const res = await fetch('http://localhost:5000/api/employees');
+            const res = await fetch('/api/employees');
             const data = await res.json();
             setAllEmployees(data);
         } catch (err) {
@@ -78,9 +78,9 @@ export default function AdminInventoryHistory() {
     const fetchHistory = async () => {
         setLoading(true);
         try {
-            let url = `http://localhost:5000/api/inventory-history`;
+            let url = `/api/inventory-history`;
             if (productId) {
-                url = `http://localhost:5000/api/inventory-history/product/${productId}`;
+                url = `/api/inventory-history/product/${productId}`;
             }
 
             const res = await fetch(url);

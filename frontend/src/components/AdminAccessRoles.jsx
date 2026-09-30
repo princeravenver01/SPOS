@@ -49,7 +49,7 @@ export default function AdminAccessRoles() {
 
     const fetchRoles = async () => {
         try {
-            const res = await fetch('http://localhost:5000/api/access-roles');
+            const res = await fetch('/api/access-roles');
             const data = await res.json();
             setRoles(data);
         } catch (err) {
@@ -72,14 +72,14 @@ export default function AdminAccessRoles() {
         try {
             showToast('loading', editingRoleId ? 'Updating role...' : 'Saving role...');
             if (editingRoleId) {
-                const res = await fetch(`http://localhost:5000/api/access-roles/${editingRoleId}`, {
+                const res = await fetch(`/api/access-roles/${editingRoleId}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(newRole)
                 });
                 if (!res.ok) throw new Error('Failed to update');
             } else {
-                const res = await fetch('http://localhost:5000/api/access-roles', {
+                const res = await fetch('/api/access-roles', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(newRole)
@@ -100,7 +100,7 @@ export default function AdminAccessRoles() {
     const confirmDelete = async () => {
         try {
             showToast('loading', 'Deleting role...');
-            const res = await fetch(`http://localhost:5000/api/access-roles/${deleteModal.id}`, { method: 'DELETE' });
+            const res = await fetch(`/api/access-roles/${deleteModal.id}`, { method: 'DELETE' });
             if (!res.ok) {
                 const errorData = await res.json();
                 showToast('error', errorData.error || 'Failed to delete role');

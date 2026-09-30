@@ -13,7 +13,7 @@ router.get('/summary', async (req, res) => {
             let params = [];
 
             if (branchId && branchId !== 'all') {
-                whereClause += " AND u.branch_id = ?";
+                whereClause += " AND o.branch_id = ?";
                 params.push(branchId);
             }
             if (date) {
@@ -68,7 +68,7 @@ router.get('/recent-transactions', async (req, res) => {
             let params = [];
 
             if (branchId && branchId !== 'all') {
-                whereClause += " AND u.branch_id = ?";
+                whereClause += " AND o.branch_id = ?";
                 params.push(branchId);
             }
 
@@ -116,7 +116,7 @@ router.get('/top-items', async (req, res) => {
             let params = [];
 
             if (branchId && branchId !== 'all') {
-                whereClause += " AND u.branch_id = ?";
+                whereClause += " AND o.branch_id = ?";
                 params.push(branchId);
             }
 
@@ -173,14 +173,25 @@ router.get('/branch-performance', async (req, res) => {
                 SELECT 
                     b.id as branch_id,
                     b.name as branch_name,
-                    COUNT(DISTINCT CASE WHEN DATE(o.created_at) = CURDATE() THEN o.id ELSE NULL END) as transactions_today,
-                    IFNULL(SUM(CASE WHEN DATE(o.created_at) = CURDATE() THEN o.gross_amount ELSE 0 END), 0) as gross_sales_today,
-                    IFNULL(SUM(CASE WHEN DATE(o.created_at) = CURDATE() THEN oi.quantity ELSE 0 END), 0) as items_sold_today
+                    IFNULL(order_totals.transactions_today, 0) as transactions_today,
+                    IFNULL(order_totals.gross_sales_today, 0) as gross_sales_today,
+                    IFNULL(item_totals.items_sold_today, 0) as items_sold_today
                 FROM branches b
-                LEFT JOIN users u ON u.branch_id = b.id
-                LEFT JOIN orders o ON o.user_id = u.id
-                LEFT JOIN order_items oi ON oi.order_id = o.id
-                GROUP BY b.id, b.name
+                LEFT JOIN (
+                    SELECT branch_id,
+                           COUNT(*) as transactions_today,
+                           SUM(gross_amount) as gross_sales_today
+                    FROM orders
+                    WHERE DATE(created_at) = CURDATE()
+                    GROUP BY branch_id
+                ) order_totals ON order_totals.branch_id = b.id
+                LEFT JOIN (
+                    SELECT o.branch_id, SUM(oi.quantity) as items_sold_today
+                    FROM orders o
+                    JOIN order_items oi ON oi.order_id = o.id
+                    WHERE DATE(o.created_at) = CURDATE()
+                    GROUP BY o.branch_id
+                ) item_totals ON item_totals.branch_id = b.id
                 ORDER BY b.id ASC
             `;
 

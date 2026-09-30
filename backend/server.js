@@ -38,16 +38,38 @@ const path = require('path');
 
 const app = express();
 
-const allowedOrigins = [
+const configuredOrigins = (process.env.CORS_ORIGINS || '')
+  .split(',')
+  .map(origin => origin.trim())
+  .filter(Boolean);
+
+const allowedOrigins = new Set([
   'http://localhost:5173', // POS frontend port
   'http://localhost:5174', // Admin frontend port
-  'http://192.168.1.50:5000',
-  'https://dashboard.silingangastro.com'
-];
+  'https://dashboard.silingangastro.com',
+  ...configuredOrigins
+]);
+
+function isPrivateFrontendOrigin(origin) {
+  try {
+    const url = new URL(origin);
+    const isFrontendPort = url.port === '5173' || url.port === '5174';
+    const isPrivateHost =
+      url.hostname === 'localhost' ||
+      url.hostname === '127.0.0.1' ||
+      /^10(?:\.\d{1,3}){3}$/.test(url.hostname) ||
+      /^192\.168(?:\.\d{1,3}){2}$/.test(url.hostname) ||
+      /^172\.(?:1[6-9]|2\d|3[01])(?:\.\d{1,3}){2}$/.test(url.hostname);
+
+    return url.protocol === 'http:' && isFrontendPort && isPrivateHost;
+  } catch {
+    return false;
+  }
+}
 
 app.use(cors({
   origin: function(origin, callback){
-    if(!origin || allowedOrigins.includes(origin)){
+    if(!origin || allowedOrigins.has(origin) || isPrivateFrontendOrigin(origin)){
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));

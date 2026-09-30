@@ -21,7 +21,7 @@ export default function CashierLogin() {
     useEffect(() => {
         const fetchUsers = async () => {
             try {
-                const url = branchId ? `http://localhost:5000/api/auth/pos-users?branch_id=${branchId}` : 'http://localhost:5000/api/auth/pos-users';
+                const url = branchId ? `/api/auth/pos-users?branch_id=${branchId}` : '/api/auth/pos-users';
                 const res = await fetch(url);
                 const data = await res.json();
                 setGroupedUsers(data);
@@ -92,7 +92,7 @@ export default function CashierLogin() {
         const attemptsKey = `attempts_${username}`;
 
         try {
-            const res = await fetch('http://localhost:5000/api/auth/login', {
+            const res = await fetch('/api/auth/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, pin })

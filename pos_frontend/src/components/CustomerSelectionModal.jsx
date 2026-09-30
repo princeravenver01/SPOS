@@ -25,7 +25,7 @@ export default function CustomerSelectionModal({ isOpen, onClose, onSelect }) {
         setIsLoading(true);
         try {
             const branchId = cashier?.activeBranch?.id || '';
-            const res = await fetch(`http://localhost:5000/api/customers?branch_id=${branchId}`);
+            const res = await fetch(`/api/customers?branch_id=${branchId}`);
             if (res.ok) {
                 const data = await res.json();
                 setCustomers(data);
@@ -51,7 +51,7 @@ export default function CustomerSelectionModal({ isOpen, onClose, onSelect }) {
                 branch_id: branchId
             };
             
-            const res = await fetch('http://localhost:5000/api/customers', {
+            const res = await fetch('/api/customers', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)

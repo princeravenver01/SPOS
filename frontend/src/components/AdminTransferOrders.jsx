@@ -39,9 +39,9 @@ export default function AdminTransferOrders() {
     const fetchData = async () => {
         try {
             const [tosRes, branchRes, prodRes] = await Promise.all([
-                fetch('http://localhost:5000/api/transfer-orders'),
-                fetch('http://localhost:5000/api/branches'),
-                fetch('http://localhost:5000/api/products')
+                fetch('/api/transfer-orders'),
+                fetch('/api/branches'),
+                fetch('/api/products')
             ]);
             setTransferOrders(await tosRes.json());
             setBranches(await branchRes.json());
@@ -53,7 +53,7 @@ export default function AdminTransferOrders() {
 
     const fetchSingleTo = async (id) => {
         try {
-            const res = await fetch(`http://localhost:5000/api/transfer-orders/${id}`);
+            const res = await fetch(`/api/transfer-orders/${id}`);
             return await res.json();
         } catch (err) {
             console.error(err);
@@ -126,7 +126,7 @@ export default function AdminTransferOrders() {
         try {
             showToast('loading', 'Saving transfer order...');
             const method = currentTo ? 'PUT' : 'POST';
-            const url = currentTo ? `http://localhost:5000/api/transfer-orders/${currentTo.id}` : `http://localhost:5000/api/transfer-orders`;
+            const url = currentTo ? `/api/transfer-orders/${currentTo.id}` : `/api/transfer-orders`;
             
             await fetch(url, {
                 method,
@@ -153,7 +153,7 @@ export default function AdminTransferOrders() {
             if (itemsToReceive.length === 0) return showToast('error', 'Enter quantities to receive');
 
             showToast('loading', 'Receiving items...');
-            await fetch(`http://localhost:5000/api/transfer-orders/${currentTo.id}/receive`, {
+            await fetch(`/api/transfer-orders/${currentTo.id}/receive`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ itemsToReceive })
@@ -170,7 +170,7 @@ export default function AdminTransferOrders() {
     const confirmDelete = async () => {
         try {
             showToast('loading', 'Deleting transfer order...');
-            await fetch(`http://localhost:5000/api/transfer-orders/${deleteModal.id}`, { method: 'DELETE' });
+            await fetch(`/api/transfer-orders/${deleteModal.id}`, { method: 'DELETE' });
             fetchData();
             setDeleteModal(null);
             if (view === 'detail') setView('list');
@@ -185,7 +185,7 @@ export default function AdminTransferOrders() {
         setIsSending(true);
         showToast('loading', 'Sending transfer order...');
         try {
-            const res = await fetch(`http://localhost:5000/api/transfer-orders/${id}/send`, {
+            const res = await fetch(`/api/transfer-orders/${id}/send`, {
                 method: 'POST'
             });
             const data = await res.json();

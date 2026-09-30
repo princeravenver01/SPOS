@@ -85,7 +85,7 @@ export default function AdminProducts() {
 
     const fetchCategories = async (branchId) => {
         try {
-            const res = await fetch(`http://localhost:5000/api/categories?branch_id=${branchId}`);
+            const res = await fetch(`/api/categories?branch_id=${branchId}`);
             const data = await res.json();
             setCategories(Array.isArray(data) ? data : []);
         } catch (err) {
@@ -96,7 +96,7 @@ export default function AdminProducts() {
 
     const fetchModifiers = async (branchId) => {
         try {
-            const res = await fetch(`http://localhost:5000/api/modifiers?branch_id=${branchId}`);
+            const res = await fetch(`/api/modifiers?branch_id=${branchId}`);
             const data = await res.json();
             setModifiers(Array.isArray(data) ? data : []);
         } catch (err) {
@@ -107,7 +107,7 @@ export default function AdminProducts() {
 
     const fetchBranches = async () => {
         try {
-            const res = await fetch('http://localhost:5000/api/branches');
+            const res = await fetch('/api/branches');
             const data = await res.json();
             setBranches(data);
         } catch (err) {
@@ -118,7 +118,7 @@ export default function AdminProducts() {
     const fetchProducts = async (branchId) => {
         if (!branchId) return;
         try {
-            const res = await fetch(`http://localhost:5000/api/products?branch_id=${branchId}`);
+            const res = await fetch(`/api/products?branch_id=${branchId}`);
             const data = await res.json();
             setProducts(Array.isArray(data) ? data : []);
         } catch (err) {
@@ -207,7 +207,7 @@ export default function AdminProducts() {
         if (!syncTargetBranchId) return showToast('error', 'Please select a target branch.');
         try {
             showToast('loading', 'Syncing product...');
-            const res = await fetch(`http://localhost:5000/api/products/${syncingProductId}/sync`, {
+            const res = await fetch(`/api/products/${syncingProductId}/sync`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ target_branch_id: syncTargetBranchId })
@@ -229,7 +229,7 @@ export default function AdminProducts() {
     const confirmDelete = async () => {
         try {
             showToast('loading', 'Deleting product...');
-            await fetch(`http://localhost:5000/api/products/${deleteModal.id}`, { method: 'DELETE' });
+            await fetch(`/api/products/${deleteModal.id}`, { method: 'DELETE' });
             fetchProducts(managingBranchId);
             setDeleteModal(null);
             showToast('success', 'Product deleted successfully!');
@@ -343,13 +343,13 @@ export default function AdminProducts() {
         try {
             showToast('loading', 'Saving product...');
             if (editingId) {
-                await fetch(`http://localhost:5000/api/products/${editingId}`, {
+                await fetch(`/api/products/${editingId}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
             } else {
-                await fetch('http://localhost:5000/api/products', {
+                await fetch('/api/products', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
@@ -429,7 +429,7 @@ export default function AdminProducts() {
                 showToast('loading', 'Importing products...');
                 setIsImporting(true);
                 for (let prod of newProductsList) {
-                    await fetch('http://localhost:5000/api/products', {
+                    await fetch('/api/products', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ ...prod, branch_id: managingBranchId })

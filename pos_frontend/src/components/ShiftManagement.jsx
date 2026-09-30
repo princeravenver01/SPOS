@@ -53,7 +53,7 @@ export default function ShiftManagement({ onMenuClick, isShiftOpen, setIsShiftOp
                             onClick={async () => {
                                 setIsProcessing(true);
                                 try {
-                                    const res = await fetch('http://localhost:5000/api/shifts/open', {
+                                    const res = await fetch('/api/shifts/open', {
                                         method: 'POST',
                                         headers: { 'Content-Type': 'application/json' },
                                         body: JSON.stringify({
@@ -311,7 +311,7 @@ export default function ShiftManagement({ onMenuClick, isShiftOpen, setIsShiftOp
                                         );
                                         const actual = parseFloat(actualCash || 0);
                                         
-                                        const res = await fetch('http://localhost:5000/api/shifts/close', {
+                                        const res = await fetch('/api/shifts/close', {
                                             method: 'POST',
                                             headers: { 'Content-Type': 'application/json' },
                                             body: JSON.stringify({

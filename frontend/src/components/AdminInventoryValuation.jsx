@@ -34,7 +34,7 @@ export default function AdminInventoryValuation() {
 
     const fetchBranches = async () => {
         try {
-            const res = await fetch('http://localhost:5000/api/branches');
+            const res = await fetch('/api/branches');
             const data = await res.json();
             setBranches(data);
         } catch (err) {
@@ -44,7 +44,7 @@ export default function AdminInventoryValuation() {
 
     const fetchCategories = async () => {
         try {
-            const res = await fetch('http://localhost:5000/api/categories');
+            const res = await fetch('/api/categories');
             const data = await res.json();
             setCategories(data);
         } catch (err) {
@@ -55,7 +55,7 @@ export default function AdminInventoryValuation() {
     const fetchValuation = async () => {
         setLoading(true);
         try {
-            let url = `http://localhost:5000/api/inventory-valuation?t=${Date.now()}`;
+            let url = `/api/inventory-valuation?t=${Date.now()}`;
             if (storeFilter !== 'All stores') {
                 url += `&branch_id=${storeFilter}`;
             }

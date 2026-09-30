@@ -38,7 +38,7 @@ export const PosProvider = ({ children }) => {
   
   const fetchMenu = async () => {
       try {
-          const res = await fetch('http://localhost:5000/api/products?branch_id=1');
+          const res = await fetch('/api/products?branch_id=1');
           const data = await res.json();
           // The products API returns an array directly, not {success: true, items: ...}
           if (Array.isArray(data)) {

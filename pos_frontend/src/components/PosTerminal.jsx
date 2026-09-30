@@ -122,7 +122,7 @@ export default function PosTerminal() {
     
     const fetchOpenTicketsData = async () => {
         try {
-            const res = await fetch(`http://localhost:5000/api/orders/open?branch_id=${cashier?.activeBranch?.id || ''}`);
+            const res = await fetch(`/api/orders/open?branch_id=${cashier?.activeBranch?.id || ''}`);
             if (res.ok) setOpenTicketsList(await res.json());
         } catch (err) { console.error(err); }
     };
@@ -252,13 +252,13 @@ export default function PosTerminal() {
 
             let res;
             if (activeOpenTicket) {
-                res = await fetch(`http://localhost:5000/api/orders/${activeOpenTicket.id}`, {
+                res = await fetch(`/api/orders/${activeOpenTicket.id}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
             } else {
-                res = await fetch('http://localhost:5000/api/orders/create', {
+                res = await fetch('/api/orders/create', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
@@ -280,7 +280,7 @@ export default function PosTerminal() {
                 // - Counter prints counter ticket/order
                 // - If only counter printer is saved, it automatically prints both tickets there
                 // - If no kitchen printer is saved, kitchen print is cancelled/skipped gracefully
-                fetch('http://localhost:5000/api/printers/auto-route', {
+                fetch('/api/printers/auto-route', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -343,7 +343,7 @@ export default function PosTerminal() {
 
     const handleAddPage = async () => {
         try {
-            const res = await fetch('http://localhost:5000/api/pos_pages', {
+            const res = await fetch('/api/pos_pages', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name: `Page ${posPages.length + 1}`, sort_order: posPages.length })
@@ -359,7 +359,7 @@ export default function PosTerminal() {
     const handleDeletePage = async (id) => {
         if (!confirm('Are you sure you want to delete this page?')) return;
         try {
-            const res = await fetch(`http://localhost:5000/api/pos_pages/${id}`, { method: 'DELETE' });
+            const res = await fetch(`/api/pos_pages/${id}`, { method: 'DELETE' });
             if (res.ok) {
                 setPosPages(posPages.filter(p => p.id !== id));
                 if (activePageId === id) setActivePageId(null);
@@ -386,12 +386,12 @@ export default function PosTerminal() {
 
         try {
             await Promise.all([
-                fetch(`http://localhost:5000/api/pos_pages/${newPages[index].id}`, {
+                fetch(`/api/pos_pages/${newPages[index].id}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ name: newPages[index].name, sort_order: newPages[index].sort_order })
                 }),
-                fetch(`http://localhost:5000/api/pos_pages/${newPages[swapIndex].id}`, {
+                fetch(`/api/pos_pages/${newPages[swapIndex].id}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ name: newPages[swapIndex].name, sort_order: newPages[swapIndex].sort_order })
@@ -405,7 +405,7 @@ export default function PosTerminal() {
     useEffect(() => {
         const fetchCurrentShift = async () => {
             try {
-                const res = await fetch(`http://localhost:5000/api/shifts/current?branch_id=${cashier?.activeBranch?.id || ''}&cashier_id=${cashier?.id || ''}`);
+                const res = await fetch(`/api/shifts/current?branch_id=${cashier?.activeBranch?.id || ''}&cashier_id=${cashier?.id || ''}`);
                 const data = await res.json();
                 if (data.success) {
                     setIsShiftOpen(true);
@@ -422,7 +422,7 @@ export default function PosTerminal() {
 
         const fetchTaxes = async () => {
             try {
-                const res = await fetch('http://localhost:5000/api/taxes');
+                const res = await fetch('/api/taxes');
                 if (res.ok) {
                     const data = await res.json();
                     setTaxes(data);
@@ -435,7 +435,7 @@ export default function PosTerminal() {
 
         const fetchDiningOptions = async () => {
             try {
-                const res = await fetch('http://localhost:5000/api/dining-options');
+                const res = await fetch('/api/dining-options');
                 if (res.ok) {
                     const data = await res.json();
                     setDiningOptions(data);
@@ -449,7 +449,7 @@ export default function PosTerminal() {
         
         const fetchSettings = async () => {
             try {
-                const res = await fetch('http://localhost:5000/api/settings');
+                const res = await fetch('/api/settings');
                 if (res.ok) {
                     const data = await res.json();
                     if (data.openTicketsConfig) {
@@ -468,7 +468,7 @@ export default function PosTerminal() {
 
         const fetchTables = async () => {
             try {
-                const res = await fetch(`http://localhost:5000/api/tables?branch_id=${cashier?.activeBranch?.id || ''}`);
+                const res = await fetch(`/api/tables?branch_id=${cashier?.activeBranch?.id || ''}`);
                 if (res.ok) {
                     const data = await res.json();
                     if (Array.isArray(data)) setAllTables(data);
@@ -481,7 +481,7 @@ export default function PosTerminal() {
 
         const fetchPosPages = async () => {
             try {
-                const res = await fetch(`http://localhost:5000/api/pos_pages?branch_id=${cashier?.activeBranch?.id || ''}`);
+                const res = await fetch(`/api/pos_pages?branch_id=${cashier?.activeBranch?.id || ''}`);
                 if (res.ok) {
                     const data = await res.json();
                     setPosPages(data);
@@ -531,9 +531,9 @@ export default function PosTerminal() {
                                     } else if (item === 'Sales' || item === 'Shift' || item === 'Receipts') {
                                         setCurrentView(item);
                                     } else if (item === 'Settings') {
-                                        window.open('http://localhost:5174/admin/settings', '_blank');
+                                        window.open(`${window.location.protocol}//${window.location.hostname}:5174/admin/settings`, '_blank');
                                     } else if (item === 'Back Office') {
-                                        window.open('http://localhost:5174/admin', '_blank');
+                                        window.open(`${window.location.protocol}//${window.location.hostname}:5174/admin`, '_blank');
                                     }
                                     setIsSidebarOpen(false);
                                 }}
@@ -742,7 +742,7 @@ export default function PosTerminal() {
                                 const page = posPages.find(p => p.id === isPageContextOpen);
                                 const newName = prompt('Enter new page name:', page.name);
                                 if (newName) {
-                                    fetch(`http://localhost:5000/api/pos_pages/${page.id}`, {
+                                    fetch(`/api/pos_pages/${page.id}`, {
                                         method: 'PUT',
                                         headers: { 'Content-Type': 'application/json' },
                                         body: JSON.stringify({ name: newName, sort_order: page.sort_order })
@@ -1079,7 +1079,7 @@ export default function PosTerminal() {
                                                     if(!activeOpenTicket) return; 
                                                     setIsTicketDropdownOpen(false);
                                                     setSelectedTicketIds([activeOpenTicket.id]); 
-                                                    try { const res = await fetch('http://localhost:5000/api/employees'); if (res.ok) setEmployeesList(await res.json()); } catch(e) {} 
+                                                    try { const res = await fetch('/api/employees'); if (res.ok) setEmployeesList(await res.json()); } catch(e) {}
                                                     setIsAssignModalOpen(true); 
                                                 }} 
                                                 className={`w-full text-left px-4 py-3 flex items-center gap-4 transition-colors ${!activeOpenTicket ? 'text-gray-600 cursor-not-allowed' : 'text-gray-300 hover:bg-white/5'}`}
@@ -1102,7 +1102,7 @@ export default function PosTerminal() {
                                                     if (!ticketId && cart.length > 0) {
                                                         try {
                                                             const total = cart.reduce((s, i) => s + parseFloat(i.price) * i.quantity, 0);
-                                                            const res = await fetch('http://localhost:5000/api/orders/create', {
+                                                            const res = await fetch('/api/orders/create', {
                                                                 method: 'POST',
                                                                 headers: { 'Content-Type': 'application/json' },
                                                                 body: JSON.stringify({
@@ -1431,7 +1431,7 @@ export default function PosTerminal() {
                                         onClick={async () => {
                                             if(window.confirm('Are you sure you want to delete the selected ticket(s)?')) {
                                                 for(let id of selectedTicketIds) {
-                                                    await fetch(`http://localhost:5000/api/orders/${id}`, { method: 'DELETE' });
+                                                    await fetch(`/api/orders/${id}`, { method: 'DELETE' });
                                                 }
                                                 showToast('Tickets deleted');
                                                 setSelectedTicketIds([]);
@@ -1451,7 +1451,7 @@ export default function PosTerminal() {
                                             <button 
                                                 onClick={async () => {
                                                     try {
-                                                        const res = await fetch('http://localhost:5000/api/employees');
+                                                        const res = await fetch('/api/employees');
                                                         if (res.ok) setEmployeesList(await res.json());
                                                     } catch(e) {}
                                                     setIsAssignModalOpen(true);
@@ -1589,7 +1589,7 @@ export default function PosTerminal() {
                                                 const isPredefined = openTicketsConfig?.predefinedTickets?.includes(sourceTicket?.ticket_name);
                                                 
                                                 try {
-                                                    const res = await fetch(`http://localhost:5000/api/orders/${selectedTicketIds[0]}/merge`, {
+                                                    const res = await fetch(`/api/orders/${selectedTicketIds[0]}/merge`, {
                                                         method: 'POST',
                                                         headers: { 'Content-Type': 'application/json' },
                                                         body: JSON.stringify({ target_order_id: t.id, delete_source: !isPredefined })
@@ -1643,7 +1643,7 @@ export default function PosTerminal() {
                                     key={emp.id}
                                     onClick={async () => {
                                         try {
-                                            const res = await fetch(`http://localhost:5000/api/orders/${selectedTicketIds[0]}/assign`, {
+                                            const res = await fetch(`/api/orders/${selectedTicketIds[0]}/assign`, {
                                                 method: 'PUT',
                                                 headers: { 'Content-Type': 'application/json' },
                                                 body: JSON.stringify({ user_id: emp.id })
@@ -1813,7 +1813,7 @@ export default function PosTerminal() {
                                     if (activeOpenTicket) {
                                         // Void the ticket in backend
                                         try {
-                                            await fetch(`http://localhost:5000/api/orders/${activeOpenTicket.id}`, {
+                                            await fetch(`/api/orders/${activeOpenTicket.id}`, {
                                                 method: 'DELETE'
                                             });
                                         } catch(e) { console.error(e); }
@@ -1893,7 +1893,7 @@ export default function PosTerminal() {
                                     }
                                     
                                     try {
-                                        const res = await fetch(`http://localhost:5000/api/orders/${activeOpenTicket.id}`, {
+                                        const res = await fetch(`/api/orders/${activeOpenTicket.id}`, {
                                             method: 'PUT',
                                             headers: { 'Content-Type': 'application/json' },
                                             body: JSON.stringify({ 

@@ -36,9 +36,9 @@ export default function AdminInventoryCounts() {
     const fetchData = async () => {
         try {
             const [icRes, branchRes, prodRes] = await Promise.all([
-                fetch('http://localhost:5000/api/inventory-counts'),
-                fetch('http://localhost:5000/api/branches'),
-                fetch('http://localhost:5000/api/products')
+                fetch('/api/inventory-counts'),
+                fetch('/api/branches'),
+                fetch('/api/products')
             ]);
             setInventoryCounts(await icRes.json());
             setBranches(await branchRes.json());
@@ -50,7 +50,7 @@ export default function AdminInventoryCounts() {
 
     const fetchSingleIc = async (id) => {
         try {
-            const res = await fetch(`http://localhost:5000/api/inventory-counts/${id}`);
+            const res = await fetch(`/api/inventory-counts/${id}`);
             return await res.json();
         } catch (err) {
             console.error(err);
@@ -126,7 +126,7 @@ export default function AdminInventoryCounts() {
 
         try {
             showToast('loading', 'Creating inventory count...');
-            const res = await fetch(`http://localhost:5000/api/inventory-counts`, {
+            const res = await fetch(`/api/inventory-counts`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ ...formIc, status })
@@ -154,7 +154,7 @@ export default function AdminInventoryCounts() {
     const handleSaveProgress = async () => {
         try {
             showToast('loading', 'Saving progress...');
-            const res = await fetch(`http://localhost:5000/api/inventory-counts/${currentIc.id}`, {
+            const res = await fetch(`/api/inventory-counts/${currentIc.id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ items: currentIc.items, status: 'In Progress' })
@@ -176,7 +176,7 @@ export default function AdminInventoryCounts() {
     const handleComplete = async () => {
         try {
             showToast('loading', 'Completing inventory count...');
-            const res = await fetch(`http://localhost:5000/api/inventory-counts/${currentIc.id}/complete`, {
+            const res = await fetch(`/api/inventory-counts/${currentIc.id}/complete`, {
                 method: 'POST'
             });
             if (res.ok) {
@@ -197,7 +197,7 @@ export default function AdminInventoryCounts() {
     const confirmDelete = async () => {
         try {
             showToast('loading', 'Deleting inventory count...');
-            const res = await fetch(`http://localhost:5000/api/inventory-counts/${deleteModal.id}`, {
+            const res = await fetch(`/api/inventory-counts/${deleteModal.id}`, {
                 method: 'DELETE'
             });
             if (res.ok) {

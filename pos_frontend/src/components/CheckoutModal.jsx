@@ -37,7 +37,7 @@ export default function CheckoutModal({
         setPrintingStatus({ kitchen: 'printing', counter: 'printing' });
 
         try {
-            const res = await fetch('http://localhost:5000/api/printers/auto-route', {
+            const res = await fetch('/api/printers/auto-route', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -142,8 +142,8 @@ export default function CheckoutModal({
         setIsProcessing(true);
         try {
             const url = activeOpenTicket 
-                ? `http://localhost:5000/api/orders/${activeOpenTicket.id}/checkout`
-                : 'http://localhost:5000/api/orders/create';
+                ? `/api/orders/${activeOpenTicket.id}/checkout`
+                : '/api/orders/create';
             const payments = [{ method: paymentMethod, amount: total }];
             const payload = activeOpenTicket ? {
                 shift_id: currentShift?.id || null,
@@ -211,8 +211,8 @@ export default function CheckoutModal({
             setIsProcessing(true);
             try {
                 const url = activeOpenTicket 
-                    ? `http://localhost:5000/api/orders/${activeOpenTicket.id}/checkout`
-                    : 'http://localhost:5000/api/orders/create';
+                    ? `/api/orders/${activeOpenTicket.id}/checkout`
+                    : '/api/orders/create';
                 const payments = updatedSplits.map(s => ({ method: s.method, amount: parseFloat(s.amount) }));
                 const payload = activeOpenTicket ? {
                     shift_id: currentShift?.id || null,

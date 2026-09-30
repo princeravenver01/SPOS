@@ -16,7 +16,7 @@ function LiveTablesView() {
 
     const fetchAreas = async () => {
         try {
-            const res = await fetch(`http://localhost:5000/api/areas?branch_id=${cashier?.activeBranch?.id || ''}`);
+            const res = await fetch(`/api/areas?branch_id=${cashier?.activeBranch?.id || ''}`);
             const data = await res.json();
             setAreas(data);
             if (data.length > 0 && !activeAreaId) {
@@ -29,7 +29,7 @@ function LiveTablesView() {
 
     const fetchTables = async () => {
         try {
-            const res = await fetch(`http://localhost:5000/api/tables?branch_id=${cashier?.activeBranch?.id || ''}`);
+            const res = await fetch(`/api/tables?branch_id=${cashier?.activeBranch?.id || ''}`);
             const data = await res.json();
             setTables(data);
         } catch (error) {
@@ -39,7 +39,7 @@ function LiveTablesView() {
 
     const fetchOpenTicketsData = async () => {
         try {
-            const res = await fetch(`http://localhost:5000/api/orders/open?branch_id=${cashier?.activeBranch?.id || ''}`);
+            const res = await fetch(`/api/orders/open?branch_id=${cashier?.activeBranch?.id || ''}`);
             const data = await res.json();
             if (Array.isArray(data)) {
                 setOpenTicketsList(data);
@@ -52,7 +52,7 @@ function LiveTablesView() {
 
     const fetchReservations = async () => {
         try {
-            const res = await fetch(`http://localhost:5000/api/reservations?branch_id=${cashier?.activeBranch?.id || ''}&status=upcoming`);
+            const res = await fetch(`/api/reservations?branch_id=${cashier?.activeBranch?.id || ''}&status=upcoming`);
             const data = await res.json();
             if (Array.isArray(data)) {
                 setReservations(data);
@@ -64,7 +64,7 @@ function LiveTablesView() {
 
     const fetchCustomers = async () => {
         try {
-            const res = await fetch(`http://localhost:5000/api/customers?branch_id=${cashier?.activeBranch?.id || ''}`);
+            const res = await fetch(`/api/customers?branch_id=${cashier?.activeBranch?.id || ''}`);
             const data = await res.json();
             if (Array.isArray(data)) {
                 setCustomers(data);
@@ -85,7 +85,7 @@ function LiveTablesView() {
 
     // SSE Real-time Feed
     useEffect(() => {
-        const eventSource = new EventSource('http://localhost:5000/api/orders/stream');
+        const eventSource = new EventSource('/api/orders/stream');
 
         eventSource.onmessage = (event) => {
             // Server pushed an update, re-fetch data instantly
@@ -174,7 +174,7 @@ function LiveTablesView() {
                                 style={{ 
                                     width: '800px', 
                                     height: '600px',
-                                    backgroundImage: activeArea.map_image_url ? `url(http://localhost:5000${activeArea.map_image_url})` : 'none',
+                                    backgroundImage: activeArea.map_image_url ? `url(${activeArea.map_image_url})` : 'none',
                                     backgroundSize: 'contain',
                                     backgroundPosition: 'center',
                                     backgroundRepeat: 'no-repeat'
@@ -401,7 +401,7 @@ function LiveTablesView() {
                                 e.preventDefault();
                                 const formData = new FormData(e.target);
                                 try {
-                                    await fetch('http://localhost:5000/api/reservations', {
+                                    await fetch('/api/reservations', {
                                         method: 'POST',
                                         headers: { 'Content-Type': 'application/json' },
                                         body: JSON.stringify({

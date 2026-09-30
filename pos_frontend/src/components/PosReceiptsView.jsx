@@ -14,8 +14,8 @@ export default function PosReceiptsView({ cashier, currentShift, onBack }) {
             setLoading(true);
             try {
                 const url = branchId 
-                    ? `http://localhost:5000/api/orders/history?branch_id=${branchId}`
-                    : `http://localhost:5000/api/orders/history`;
+                    ? `/api/orders/history?branch_id=${branchId}`
+                    : `/api/orders/history`;
                 const res = await fetch(url);
                 if (res.ok) {
                     const data = await res.json();
@@ -169,7 +169,7 @@ export default function PosReceiptsView({ cashier, currentShift, onBack }) {
                                 <button 
                                     onClick={async () => {
                                         try {
-                                            const res = await fetch('http://localhost:5000/api/printers/print-receipt', {
+                                            const res = await fetch('/api/printers/print-receipt', {
                                                 method: 'POST',
                                                 headers: { 'Content-Type': 'application/json' },
                                                 body: JSON.stringify({
@@ -221,7 +221,7 @@ export default function PosReceiptsView({ cashier, currentShift, onBack }) {
                                             onClick={async () => {
                                                 setShowMenu(false);
                                                 try {
-                                                    const res = await fetch('http://localhost:5000/api/printers/print-kitchen', {
+                                                    const res = await fetch('/api/printers/print-kitchen', {
                                                         method: 'POST',
                                                         headers: { 'Content-Type': 'application/json' },
                                                         body: JSON.stringify({

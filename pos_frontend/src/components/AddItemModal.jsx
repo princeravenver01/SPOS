@@ -16,9 +16,9 @@ export default function AddItemModal({ isOpen, onClose, activeGridSlot, posPages
             setIsLoading(true);
             try {
                 const [itemsRes, catRes, discRes] = await Promise.all([
-                    fetch('http://localhost:5000/api/products'),
-                    fetch('http://localhost:5000/api/categories'),
-                    fetch('http://localhost:5000/api/discounts')
+                    fetch('/api/products'),
+                    fetch('/api/categories'),
+                    fetch('/api/discounts')
                 ]);
                 
                 if (itemsRes.ok) setItems(await itemsRes.json());
@@ -55,7 +55,7 @@ export default function AddItemModal({ isOpen, onClose, activeGridSlot, posPages
 
         // Save to backend
         try {
-            const res = await fetch(`http://localhost:5000/api/pos_pages/${pageId}/items`, {
+            const res = await fetch(`/api/pos_pages/${pageId}/items`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ items: updatedItems })
@@ -63,7 +63,7 @@ export default function AddItemModal({ isOpen, onClose, activeGridSlot, posPages
 
             if (res.ok) {
                 // Update local state by refetching pages (to get all joined data like names/colors)
-                const pagesRes = await fetch('http://localhost:5000/api/pos_pages');
+                const pagesRes = await fetch('/api/pos_pages');
                 if (pagesRes.ok) {
                     setPosPages(await pagesRes.json());
                 }
@@ -83,14 +83,14 @@ export default function AddItemModal({ isOpen, onClose, activeGridSlot, posPages
         const updatedItems = [...(currentPage.items || [])].filter(i => i.grid_index !== index);
 
         try {
-            const res = await fetch(`http://localhost:5000/api/pos_pages/${pageId}/items`, {
+            const res = await fetch(`/api/pos_pages/${pageId}/items`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ items: updatedItems })
             });
 
             if (res.ok) {
-                const pagesRes = await fetch('http://localhost:5000/api/pos_pages');
+                const pagesRes = await fetch('/api/pos_pages');
                 if (pagesRes.ok) {
                     setPosPages(await pagesRes.json());
                 }

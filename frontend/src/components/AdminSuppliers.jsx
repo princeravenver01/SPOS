@@ -31,7 +31,7 @@ export default function AdminSuppliers() {
 
     const fetchSuppliers = async () => {
         try {
-            const res = await fetch('http://localhost:5000/api/suppliers');
+            const res = await fetch('/api/suppliers');
             const data = await res.json();
             setSuppliers(data);
         } catch (err) {
@@ -44,13 +44,13 @@ export default function AdminSuppliers() {
         try {
             showToast('loading', 'Saving supplier...');
             if (editingSupplierId) {
-                await fetch(`http://localhost:5000/api/suppliers/${editingSupplierId}`, {
+                await fetch(`/api/suppliers/${editingSupplierId}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(newSupplier)
                 });
             } else {
-                await fetch('http://localhost:5000/api/suppliers', {
+                await fetch('/api/suppliers', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(newSupplier)
@@ -90,7 +90,7 @@ export default function AdminSuppliers() {
     const confirmDelete = async () => {
         try {
             showToast('loading', 'Deleting supplier...');
-            await fetch(`http://localhost:5000/api/suppliers/${deleteModal.id}`, { method: 'DELETE' });
+            await fetch(`/api/suppliers/${deleteModal.id}`, { method: 'DELETE' });
             fetchSuppliers();
             setDeleteModal(null);
             showToast('success', 'Supplier deleted successfully!');

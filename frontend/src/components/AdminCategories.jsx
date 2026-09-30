@@ -34,7 +34,7 @@ export default function AdminCategories() {
 
     const fetchBranches = async () => {
         try {
-            const res = await fetch('http://localhost:5000/api/branches');
+            const res = await fetch('/api/branches');
             const data = await res.json();
             setBranches(data);
             if (data.length > 0) {
@@ -48,7 +48,7 @@ export default function AdminCategories() {
     const fetchCategories = async () => {
         if (!managingBranchId) return;
         try {
-            const res = await fetch(`http://localhost:5000/api/categories?branch_id=${managingBranchId}`);
+            const res = await fetch(`/api/categories?branch_id=${managingBranchId}`);
             const data = await res.json();
             setCategories(data);
         } catch (err) {
@@ -61,13 +61,13 @@ export default function AdminCategories() {
         try {
             showToast('loading', 'Saving category...');
             if (editingId) {
-                await fetch(`http://localhost:5000/api/categories/${editingId}`, {
+                await fetch(`/api/categories/${editingId}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(newCategory)
                 });
             } else {
-                await fetch('http://localhost:5000/api/categories', {
+                await fetch('/api/categories', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ ...newCategory, branch_id: managingBranchId })
@@ -87,7 +87,7 @@ export default function AdminCategories() {
     const confirmDelete = async () => {
         try {
             showToast('loading', 'Deleting category...');
-            await fetch(`http://localhost:5000/api/categories/${deleteModal.id}`, { method: 'DELETE' });
+            await fetch(`/api/categories/${deleteModal.id}`, { method: 'DELETE' });
             fetchCategories();
             setDeleteModal(null);
             showToast('success', 'Category deleted successfully!');

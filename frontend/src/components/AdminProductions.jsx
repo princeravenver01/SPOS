@@ -39,7 +39,7 @@ export default function AdminProductions() {
 
     const fetchProductions = async () => {
         try {
-            const res = await fetch('http://localhost:5000/api/productions');
+            const res = await fetch('/api/productions');
             setProductions(await res.json());
         } catch (err) {
             console.error('Failed to fetch productions', err);
@@ -48,7 +48,7 @@ export default function AdminProductions() {
 
     const fetchBranches = async () => {
         try {
-            const res = await fetch('http://localhost:5000/api/branches');
+            const res = await fetch('/api/branches');
             setBranches(await res.json());
         } catch (err) {
             console.error('Failed to fetch branches', err);
@@ -57,7 +57,7 @@ export default function AdminProductions() {
 
     const fetchProducts = async (branchId) => {
         try {
-            const res = await fetch(`http://localhost:5000/api/products?branch_id=${branchId}`);
+            const res = await fetch(`/api/products?branch_id=${branchId}`);
             setProducts(await res.json());
         } catch (err) {
             console.error('Failed to fetch products', err);
@@ -72,7 +72,7 @@ export default function AdminProductions() {
 
         try {
             showToast('loading', 'Saving production...');
-            const res = await fetch('http://localhost:5000/api/productions', {
+            const res = await fetch('/api/productions', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -183,7 +183,7 @@ export default function AdminProductions() {
                                             className="border-b border-white/5 hover:bg-white/5 transition-colors group cursor-pointer"
                                             onClick={async () => {
                                                 try {
-                                                    const res = await fetch(`http://localhost:5000/api/productions/${prod.id}`);
+                                                    const res = await fetch(`/api/productions/${prod.id}`);
                                                     if (res.ok) {
                                                         const data = await res.json();
                                                         setSelectedProduction(data);

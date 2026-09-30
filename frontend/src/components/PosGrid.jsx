@@ -98,7 +98,7 @@ export default function PosGrid() {
         if (activeTicket.length === 0) return;
         
         try {
-            const res = await fetch('http://localhost:5000/api/orders/create', {
+            const res = await fetch('/api/orders/create', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

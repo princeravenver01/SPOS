@@ -41,7 +41,7 @@ export default function AdminModifiers() {
 
     const fetchBranches = async () => {
         try {
-            const res = await fetch('http://localhost:5000/api/branches');
+            const res = await fetch('/api/branches');
             const data = await res.json();
             setBranches(data);
             if (data.length > 0) {
@@ -55,7 +55,7 @@ export default function AdminModifiers() {
     const fetchModifiers = async (branchId) => {
         if (!branchId) return;
         try {
-            const res = await fetch(`http://localhost:5000/api/modifiers?branch_id=${branchId}`);
+            const res = await fetch(`/api/modifiers?branch_id=${branchId}`);
             const data = await res.json();
             setModifiers(Array.isArray(data) ? data : []);
         } catch (err) {
@@ -106,13 +106,13 @@ export default function AdminModifiers() {
         try {
             showToast('loading', 'Saving modifier...');
             if (editingId) {
-                await fetch(`http://localhost:5000/api/modifiers/${editingId}`, {
+                await fetch(`/api/modifiers/${editingId}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(modifierToSave)
                 });
             } else {
-                await fetch('http://localhost:5000/api/modifiers', {
+                await fetch('/api/modifiers', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(modifierToSave)
@@ -132,7 +132,7 @@ export default function AdminModifiers() {
     const confirmDelete = async () => {
         try {
             showToast('loading', 'Deleting modifier...');
-            await fetch(`http://localhost:5000/api/modifiers/${deleteModal.id}`, { method: 'DELETE' });
+            await fetch(`/api/modifiers/${deleteModal.id}`, { method: 'DELETE' });
             fetchModifiers(managingBranchId);
             setDeleteModal(null);
             showToast('success', 'Modifier deleted successfully!');

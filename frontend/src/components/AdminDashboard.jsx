@@ -28,10 +28,10 @@ export default function AdminDashboard() {
         setLoading(true);
         try {
             const [transactionsRes, itemsRes, performanceRes, branchesRes] = await Promise.all([
-                fetch(`http://localhost:5000/api/dashboard/recent-transactions?branchId=${branchId}`),
-                fetch(`http://localhost:5000/api/dashboard/top-items?branchId=${branchId}`),
-                fetch(`http://localhost:5000/api/dashboard/branch-performance`).catch(() => null),
-                fetch(`http://localhost:5000/api/branches`).catch(() => null)
+                fetch(`/api/dashboard/recent-transactions?branchId=${branchId}`),
+                fetch(`/api/dashboard/top-items?branchId=${branchId}`),
+                fetch(`/api/dashboard/branch-performance`).catch(() => null),
+                fetch(`/api/branches`).catch(() => null)
             ]);
 
             if (transactionsRes.ok) {

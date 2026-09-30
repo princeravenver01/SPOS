@@ -36,7 +36,7 @@ export default function AdminSalesByPaymentType() {
 
     const fetchEmployees = async () => {
         try {
-            const response = await fetch('http://localhost:5000/api/employees');
+            const response = await fetch('/api/employees');
             const data = await response.json();
             setEmployees(data);
         } catch (error) {
@@ -47,7 +47,7 @@ export default function AdminSalesByPaymentType() {
     const fetchSalesByPaymentType = async () => {
         setLoading(true);
         try {
-            const response = await fetch(`http://localhost:5000/api/reports/sales-by-payment-type?startDate=${startDate}&endDate=${endDate}&employeeId=${employeeId}`);
+            const response = await fetch(`/api/reports/sales-by-payment-type?startDate=${startDate}&endDate=${endDate}&employeeId=${employeeId}`);
             if (response.ok) {
                 const data = await response.json();
                 if (data.success) {
